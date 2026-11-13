@@ -1,2 +1,15 @@
-# TelegramR-Android
-Unofficial Telegram for Android client with a single-pane mode for dual-screen devices.
+# TelegramR Android
+
+Неофіційний клієнт Telegram для Android з окремим пакетом `app.telegramr.android`. Може працювати поруч з офіційним клієнтом і має власний сеанс входу.
+
+- У режимі «Як на телефоні» список чатів і переписка відкриваються по черзі. На двоекранних пристроях активна панель розміщується в одній придатній області, якщо Android повідомляє про шарнір. У налаштуваннях є режим «Дві панелі».
+- «Додатково» містить «Невидимку», тихе надсилання, відкладення звичайного тексту на 12 секунд і показ поміченої активності.
+- У списку чатів можна налаштувати розмір шрифту й аватарів, а в меню відкритого чату є дія «Прочитати все».
+
+[Що змінилося у версії 13.2.2-telegramr.5](CHANGELOG.md) · [Як зібрати](BUILD.md) · [Releases](https://github.com/Qahnaarin7/TelegramR-Android/releases)
+
+## Вихідний код
+
+`TelegramR-source.patch` містить кумулятивні зміни для Telegram for Android 13.2.2. База — [DrKLO/Telegram, ревізія 21f7d109da6ab3506c9e9577f98c6a38771ab335](https://github.com/DrKLO/Telegram/tree/21f7d109da6ab3506c9e9577f98c6a38771ab335). Заголовки авторства збережено. Умови розповсюдження наведено в [LICENSE](LICENSE). Власні реквізити Telegram API й ключ Android-підпису задаються локально, як описано в інструкції збірки.
+
+Оновлення всередині Android-клієнта плануються окремо. [TelegramR для Windows](https://github.com/Qahnaarin7/TelegramR) має власний репозиторій і канал релізів.
