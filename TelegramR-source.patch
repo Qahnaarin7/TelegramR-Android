@@ -1853,7 +1853,7 @@ index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96
 +    }
 +}
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
-index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a286f12b35 100644
+index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..89f2fbd9460a3cfd96af61c0e564182cd8893dc8 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
 @@ -63,6 +63,7 @@ import org.telegram.messenger.MessagesController;
@@ -2029,17 +2029,22 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
          }
  
          private void showOptionsForTheme(Theme.ThemeInfo themeInfo) {
-@@ -2389,6 +2425,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2389,6 +2425,14 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  case TYPE_NIGHT_THEME:
                      view = new NotificationsCheckCell(mContext, 21, 60, true);
                      break;
-+                case TYPE_APP_ICONS:
-+                    view = new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
++                case TYPE_APP_ICONS: {
++                    // The settings list disables non-action rows. Keep the nested picker enabled.
++                    FrameLayout row = new FrameLayout(mContext);
++                    row.addView(new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount),
++                            LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
++                    view = row;
 +                    break;
++                }
                  case TYPE_THEME_LIST:
                      first = true;
                      themesHorizontalListCell = new ThemesHorizontalListCell(mContext, ThemeActivity.this, currentType, defaultThemes, darkThemes) {
-@@ -2567,9 +2606,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2567,9 +2611,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  case TYPE_SAVE_TO_GALLERY:
                      view = new RadioButtonCell(mContext);
                      break;
@@ -2049,7 +2054,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                  case TYPE_CHOOSE_COLOR:
                      view = new PeerColorActivity.ChangeNameColorCell(currentAccount, 0, mContext, getResourceProvider());
                      break;
-@@ -2582,7 +2618,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2582,7 +2623,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
              switch (holder.getItemViewType()) {
                  case TYPE_TEXT_SETTING: {
                      TextSettingsCell cell = (TextSettingsCell) holder.itemView;
@@ -2061,7 +2066,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                          if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_NONE || Theme.getCurrentNightTheme() == null) {
                              cell.setTextAndValue(getString(R.string.AutoNightTheme), getString(R.string.AutoNightThemeOff), false);
                          } else {
-@@ -2598,6 +2637,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2598,6 +2642,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                          cell.setTextAndValue(getString("AutoNightTo", R.string.AutoNightTo), String.format("%02d:%02d", currentHour, currentMinute), false);
                      } else if (position == scheduleUpdateLocationRow) {
                          cell.setTextAndValue(getString("AutoNightUpdateLocation", R.string.AutoNightUpdateLocation), Theme.autoNightCityName, false);
@@ -2072,7 +2077,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                      } else if (position == contactsSortRow) {
                          String value;
                          SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-@@ -2682,6 +2725,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2682,6 +2730,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                          }
                      } else if (position == textSizeHeaderRow) {
                          headerCell.setText(getString("TextSizeHeader", R.string.TextSizeHeader));
@@ -2081,7 +2086,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                      } else if (position == chatListHeaderRow) {
                          headerCell.setText(getString("ChatList", R.string.ChatList));
                      } else if (position == bubbleRadiusHeaderRow) {
-@@ -2690,8 +2735,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2690,8 +2740,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                          headerCell.setText(getString("ChatListSwipeGesture", R.string.ChatListSwipeGesture));
                      } else if (position == selectThemeHeaderRow) {
                          headerCell.setText(getString("SelectTheme", R.string.SelectTheme));
@@ -2090,7 +2095,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                      } else if (position == otherHeaderRow) {
                          headerCell.setText(getString("OtherSettings", R.string.OtherSettings));
                      } else if (position == mediaSoundHeaderRow) {
-@@ -2842,21 +2885,21 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2842,21 +2890,21 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
              if (position == scheduleFromRow || position == distanceRow ||
                      position == scheduleToRow || position == scheduleUpdateLocationRow ||
                      position == contactsReimportRow || position == contactsSortRow ||
@@ -2116,7 +2121,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
                      position == otherHeaderRow) {
                  return TYPE_HEADER;
              } else if (position == automaticBrightnessRow) {
-@@ -2873,6 +2916,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2873,6 +2921,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  return TYPE_NIGHT_THEME;
              } else if (position == themeListRow) {
                  return TYPE_THEME_LIST;
@@ -2125,7 +2130,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
              } else if (position == themeAccentListRow) {
                  return TYPE_THEME_ACCENT_LIST;
              } else if (position == bubbleRadiusRow) {
-@@ -2888,8 +2933,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2888,8 +2938,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  return TYPE_DEFAULT_THEMES_PREVIEW;
              } else if (position == saveToGalleryOption1Row || position == saveToGalleryOption2Row) {
                  return TYPE_SAVE_TO_GALLERY;
@@ -2134,7 +2139,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
              } else if (position == changeUserColor) {
                  return TYPE_CHOOSE_COLOR;
              }
-@@ -2907,7 +2950,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2907,7 +2955,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
      public ArrayList<ThemeDescription> getThemeDescriptions() {
          ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
  
@@ -2143,7 +2148,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a2
  
          themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault));
  
-@@ -2945,38 +2988,28 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2945,38 +2993,28 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSizeCell.class}, null, null, null, Theme.key_chat_inTimeSelectedText));
          themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSizeCell.class}, null, null, null, Theme.key_chat_outTimeSelectedText));
  
@@ -7976,7 +7981,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..21f41a4f2b1513c6ccbab7ddfc1a4cbfc613f3d6 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ac0b2f06993add6bc496f4f1be84469fc339cf22 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -7986,8 +7991,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..21f41a4f2b1513c6ccbab7ddfc1a4cbf
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7308
-+APP_VERSION_NAME=13.2.2-telegramr.6
++APP_VERSION_CODE=7309
++APP_VERSION_NAME=13.2.2-telegramr.7
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android
