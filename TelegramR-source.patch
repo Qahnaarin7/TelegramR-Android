@@ -812,7 +812,7 @@ index 698bf4d5d0417222b2579219eb725a36d732e016..b183f29fc350fa3b88c37848c352d098
              tagsRight = getMeasuredWidth() - dp(messagePaddingStart);
              tagsLeft = dp(64);
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
-index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc8484924072b83f 100644
+index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e39121767790f48ac6 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 @@ -192,6 +192,7 @@ import org.telegram.messenger.SharedConfig;
@@ -823,7 +823,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
  import org.telegram.messenger.UserConfig;
  import org.telegram.messenger.UserObject;
  import org.telegram.messenger.Utilities;
-@@ -1297,6 +1298,22 @@ public class ChatActivity extends BaseFragment implements
+@@ -1297,6 +1298,26 @@ public class ChatActivity extends BaseFragment implements
      public final static int OPTION_WELCOME_REVERT = 116;
      public final static int OPTION_SEND_MONEY = 117;
      public final static int OPTION_STOP_LIVE_LOCATION = 118;
@@ -838,6 +838,10 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
 +                && !ChatObject.canWriteToChat(currentChat);
 +    }
 +
++    private boolean isTelegramRChannelBarHidden() {
++        return canToggleTelegramRChannelBar() && TelegramRSettings.hideChannelBar(currentAccount, dialog_id);
++    }
++
 +    private int telegramRChannelBarLabel() {
 +        return TelegramRSettings.hideChannelBar(currentAccount, dialog_id)
 +                ? R.string.TelegramRShowChannelBar : R.string.TelegramRHideChannelBar;
@@ -846,7 +850,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
  
      private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
              NotificationCenter.messagesRead,
-@@ -3014,11 +3031,13 @@ public class ChatActivity extends BaseFragment implements
+@@ -3014,11 +3035,13 @@ public class ChatActivity extends BaseFragment implements
  
                  if (startLoadFromMessageId == 0) {
                      SharedPreferences sharedPreferences = MessagesController.getNotificationsSettings(currentAccount);
@@ -862,7 +866,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
                          startLoadFromMessageId = messageId;
                      }
                  } else {
-@@ -4050,6 +4069,14 @@ public class ChatActivity extends BaseFragment implements
+@@ -4050,6 +4073,14 @@ public class ChatActivity extends BaseFragment implements
                      openTopicsPanel();
                  } else if (id == chat_menu_topic_create) {
                      presentFragment(TopicCreateFragment.create(-dialog_id, 0).setOpenInChatActivity(ChatActivity.this));
@@ -877,7 +881,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
                  } else if (id == 888) {
                      dumpCanvas();
                  } else if (id == 889) {
-@@ -4520,6 +4547,20 @@ public class ChatActivity extends BaseFragment implements
+@@ -4520,6 +4551,20 @@ public class ChatActivity extends BaseFragment implements
              }
          }
  
@@ -898,13 +902,12 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
          if (BuildConfig.DEBUG_PRIVATE_VERSION && headerItem != null) {
              headerItem.lazilyAddSubItem(888, R.drawable.menu_download_round, "Dump Canvas");
          }
-@@ -8416,7 +8457,16 @@ public class ChatActivity extends BaseFragment implements
+@@ -8416,7 +8461,15 @@ public class ChatActivity extends BaseFragment implements
              @Override
              public void setVisibility(int visibility) {
                  super.setVisibility(visibility);
 -                bottomViewsVisibilityController.setViewVisible(BOTTOM_OVERLAY_CHAT_CONTAINER, visibility == VISIBLE, getMeasuredWidth() > 0);
-+                final boolean hidden = canToggleTelegramRChannelBar()
-+                        && TelegramRSettings.hideChannelBar(currentAccount, dialog_id);
++                final boolean hidden = isTelegramRChannelBarHidden();
 +                setAlpha(hidden ? 0f : 1f);
 +                setImportantForAccessibility(hidden ? IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS : IMPORTANT_FOR_ACCESSIBILITY_AUTO);
 +                bottomViewsVisibilityController.setViewVisible(BOTTOM_OVERLAY_CHAT_CONTAINER, visibility == VISIBLE && !hidden, getMeasuredWidth() > 0);
@@ -916,7 +919,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
              }
          };
          bottomChannelButtonsLayout.setVisibility(View.INVISIBLE);
-@@ -17230,7 +17280,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -17230,7 +17283,9 @@ public class ChatActivity extends BaseFragment implements
          }
          updateFloatingTopicView();
          invalidateChatListViewTopPadding();
@@ -927,7 +930,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
              int scheduledRead = 0;
              if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE)) {
                  int counterDecrement = 0;
-@@ -19655,6 +19707,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -19655,6 +19710,9 @@ public class ChatActivity extends BaseFragment implements
      }
  
      private void checkActionBarMenu(boolean animated) {
@@ -937,7 +940,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
          if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat) ||
                  currentChat != null && (chatMode != 0 || threadMessageId != 0 || chatInfo == null || chatInfo.ttl_period == 0) ||
                  currentUser != null && (UserObject.isDeleted(currentUser) || currentEncryptedChat == null && (userInfo == null || userInfo.ttl_period == 0))) {
-@@ -21453,7 +21508,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -21453,7 +21511,9 @@ public class ChatActivity extends BaseFragment implements
  
              resumeDelayedFragmentAnimation();
              MessageObject messageObject = messArr.get(0);
@@ -948,7 +951,15 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
              AndroidUtilities.cancelRunOnUIThread(fragmentTransitionRunnable);
              fragmentTransitionRunnable.run();
              return;
-@@ -30872,9 +30929,36 @@ public class ChatActivity extends BaseFragment implements
+@@ -28926,6 +28986,7 @@ public class ChatActivity extends BaseFragment implements
+         bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIFT, showGiftButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
+         bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIGA_GROUP_INFO, showGigaGroupButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
+ 
++        onBottomItemsVisibilityChanged();
+         checkRaiseSensors();
+     }
+ 
+@@ -30872,9 +30933,36 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -985,7 +996,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
          scrolling = false;
          if (scrimPopupWindow != null) {
              scrimPopupWindow.setPauseNotifications(false);
-@@ -34293,6 +34377,10 @@ public class ChatActivity extends BaseFragment implements
+@@ -34293,6 +34381,10 @@ public class ChatActivity extends BaseFragment implements
          }
          boolean preserveDim = false;
          switch (option) {
@@ -996,7 +1007,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
              case OPTION_RETRY: {
                  final MessageObject object = selectedObject;
                  final MessageObject.GroupedMessages group = selectedObjectGroup;
-@@ -47104,6 +47192,14 @@ public class ChatActivity extends BaseFragment implements
+@@ -47104,6 +47196,14 @@ public class ChatActivity extends BaseFragment implements
              icons.add(sendMoneyIndex, R.drawable.ic_gram);
          }
  
@@ -1011,7 +1022,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
          if (showWelcomeMessageRevertOption(primaryMessage)) {
              items.add(getString(R.string.WelcomeMessageRevert));
              options.add(OPTION_WELCOME_REVERT);
-@@ -47111,6 +47207,66 @@ public class ChatActivity extends BaseFragment implements
+@@ -47111,6 +47211,66 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -1078,6 +1089,41 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..f1cbd76b5bf7b3ae5ab1e778fc848492
      private boolean showWelcomeMessageRevertOption(MessageObject messageObject) {
          return chatMode == MODE_DEFAULT && messageObject != null && messageObject.isWelcomeAnchored();
      }
+@@ -47176,6 +47336,9 @@ public class ChatActivity extends BaseFragment implements
+             pollAddVisibility = animatorPollAddAnswerVisibility.getFloatValue();
+         }
+ 
++        if (isTelegramRChannelBarHidden() && bottomViewsVisibilityController.getCurrentPriorityContainerId() == 0) {
++            return 0;
++        }
+         if (!isInsideContainer && !isInPreviewMode()) {
+             return lerp(Math.max(lerp(defaultIslandHeight, enterViewIslandHeight, enterViewFactor) * visibility, dp(44)), -dp(7), pollAddVisibility);
+         } else {
+@@ -47455,8 +47618,9 @@ public class ChatActivity extends BaseFragment implements
+ 
+     private void checkBottomViewVisibility(View view, int containerId, boolean allowVisibilityChange) {
+         if (view != null) {
+-            final float alpha = bottomViewsVisibilityController.getVisibility(containerId)
+-                * (1f - animatorPullingDownContainerVisibility.getFloatValue())
++            final float containerVisibility = containerId == BOTTOM_OVERLAY_CHAT_CONTAINER && isTelegramRChannelBarHidden()
++                    ? 0f : bottomViewsVisibilityController.getVisibility(containerId);
++            final float alpha = containerVisibility * (1f - animatorPullingDownContainerVisibility.getFloatValue())
+                 * (1f - animatorPollAddAnswerVisibility.getFloatValue());
+ 
+             view.setAlpha(alpha);
+@@ -47497,8 +47661,11 @@ public class ChatActivity extends BaseFragment implements
+             bottomOverlay.setTranslationY(dp(54) * hideFactor);
+         }
+         if (chatInputViewsContainer != null) {
+-            chatInputViewsContainer.setInputBubbleAlpha((int) (255 * (1f - hideFactor)));
++            final boolean emptyChannelBar = isTelegramRChannelBarHidden()
++                    && bottomViewsVisibilityController.getCurrentPriorityContainerId() == 0;
++            chatInputViewsContainer.setInputBubbleAlpha(emptyChannelBar ? 0 : (int) (255 * (1f - hideFactor)));
+             chatInputViewsContainer.setInputBubbleTranslationY(dp(54) * hideFactor);
++            chatInputViewsContainer.invalidate();
+         }
+ 
+ 
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatPaneLayout.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatPaneLayout.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..b47e0faf9e43b2ec38adadbfc21d3c9bbbd25c8b
@@ -1683,10 +1729,10 @@ index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..f0841b1f9ac0dc3138e6906a48045e90
                      new SearchResult(327, getString(R.string.RaiseToListen), "raiseToListenRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/data/raise-to-listen"),
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d7bc75813
+index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96514af30d
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,119 @@
 +/*
 + * TelegramR modifications to Telegram for Android.
 + * Licensed under GNU GPL v. 2 or later. See LICENSE.
@@ -1700,7 +1746,6 @@ index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d
 +
 +import org.telegram.messenger.R;
 +import org.telegram.messenger.TelegramRSettings;
-+import org.telegram.ui.Cells.AppIconsSelectorCell;
 +import org.telegram.ui.Components.RecyclerListView;
 +import org.telegram.ui.Components.UItem;
 +import org.telegram.ui.Components.UniversalAdapter;
@@ -1717,7 +1762,6 @@ index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d
 +    private static final int DELAY = 6;
 +    private static final int OBSERVED = 7;
 +    private static final int THEMES = 9;
-+    private AppIconsSelectorCell icons;
 +
 +    TelegramRSettingsActivity(int account) {
 +        currentAccount = account;
@@ -1731,7 +1775,6 @@ index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d
 +    @Override
 +    public View createView(Context context) {
 +        setHasOwnBackground(true);
-+        icons = new AppIconsSelectorCell(context, this, currentAccount);
 +        final View view = super.createView(context);
 +        listView.setSections();
 +        listView.setSectionsDrawBackground(true);
@@ -1772,10 +1815,6 @@ index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d
 +        items.add(UItem.asShadow(getString(R.string.TelegramRSilentSendDescription)));
 +        items.add(UItem.asHeader(getString(R.string.TelegramRAppearance)));
 +        items.add(UItem.asButton(THEMES, getString(R.string.TelegramRThemes)));
-+        if (icons != null) {
-+            items.add(UItem.asHeader(getString(R.string.TelegramRAppIcons)));
-+            items.add(UItem.asCustom(icons));
-+        }
 +    }
 +
 +    private void addPrivacy(ArrayList<UItem> items, int id, int label, int description,
@@ -1814,7 +1853,7 @@ index 0000000000000000000000000000000000000000..816cbc28f2180486a45c08a1638cbd1d
 +    }
 +}
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
-index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da106a40b9 100644
+index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..47fe7532c3f3d694ac1da3c8134c12a286f12b35 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ThemeActivity.java
 @@ -63,6 +63,7 @@ import org.telegram.messenger.MessagesController;
@@ -1833,7 +1872,15 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
  import org.telegram.ui.Cells.BrightnessControlCell;
  import org.telegram.ui.Cells.ChatListCell;
  import org.telegram.ui.Cells.ChatMessageCell;
-@@ -155,6 +155,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -93,6 +93,7 @@ import org.telegram.ui.Cells.TextInfoPrivacyCell;
+ import org.telegram.ui.Cells.TextSettingsCell;
+ import org.telegram.ui.Cells.ThemePreviewMessagesCell;
+ import org.telegram.ui.Cells.ThemeTypeCell;
++import org.telegram.ui.Cells.AppIconsSelectorCell;
+ import org.telegram.ui.Cells.ThemesHorizontalListCell;
+ import org.telegram.ui.Components.AlertsCreator;
+ import org.telegram.ui.Components.BulletinFactory;
+@@ -155,6 +156,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
      private int backgroundRow;
      private int textSizeHeaderRow;
      @Keep
@@ -1841,11 +1888,13 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
      private int textSizeRow;
      private int settingsRow;
      private int directShareRow;
-@@ -207,6 +208,15 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -207,6 +209,17 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
      private int bubbleRadiusInfoRow;
      private int chatListHeaderRow;
      private int chatListRow;
 +    private int telegramRDialogSizeRow;
++    private int telegramRAppIconsHeaderRow;
++    private int telegramRAppIconsRow;
 +
 +    private CharSequence[] telegramRDialogSizes() {
 +        return new CharSequence[]{
@@ -1857,7 +1906,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
      private int chatListInfoRow;
      private int themeListRow;
      private int themeListRow2;
-@@ -237,10 +247,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -237,10 +250,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
      private int liteModeRow;
      private int liteModeInfoRow;
  
@@ -1868,15 +1917,17 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
  
      private int rowCount;
  
-@@ -671,6 +678,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -671,6 +681,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          bubbleRadiusInfoRow = -1;
          chatListHeaderRow = -1;
          chatListRow = -1;
 +        telegramRDialogSizeRow = -1;
++        telegramRAppIconsHeaderRow = -1;
++        telegramRAppIconsRow = -1;
          chatListInfoRow = -1;
          chatBlurRow = -1;
          pauseOnRecordRow = -1;
-@@ -685,6 +693,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -685,6 +698,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          liteModeRow = -1;
          liteModeInfoRow = -1;
  
@@ -1884,7 +1935,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
          textSizeRow = -1;
          backgroundRow = -1;
          changeUserColor = -1;
-@@ -713,9 +722,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -713,9 +727,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          editThemeRow = -1;
          createNewThemeRow = -1;
  
@@ -1894,7 +1945,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
          lastShadowRow = -1;
  
          defaultThemes.clear();
-@@ -762,6 +768,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -762,13 +773,19 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          } else if (currentType == THEME_TYPE_BASIC) {
              textSizeHeaderRow = rowCount++;
              textSizeRow = rowCount++;
@@ -1902,7 +1953,19 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
              backgroundRow = rowCount++;
              changeUserColor = rowCount++;
              newThemeInfoRow = rowCount++;
-@@ -776,12 +783,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+             themeHeaderRow = rowCount++;
+ 
+             themeListRow2 = rowCount++;
++            if (Theme.getCurrentTheme().hasAccentColors()) {
++                themeAccentListRow = rowCount++;
++            }
+             themeInfoRow = rowCount++;
++            telegramRAppIconsHeaderRow = rowCount++;
++            telegramRAppIconsRow = rowCount++;
+ 
+             bubbleRadiusHeaderRow = rowCount++;
+             bubbleRadiusRow = rowCount++;
+@@ -776,12 +793,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
  
              chatListHeaderRow = rowCount++;
              chatListRow = rowCount++;
@@ -1916,7 +1979,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
              swipeGestureHeaderRow = rowCount++;
              swipeGestureRow = rowCount++;
              swipeGestureInfoRow = rowCount++;
-@@ -1214,7 +1218,29 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -1214,7 +1228,29 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          ((DefaultItemAnimator) listView.getItemAnimator()).setDelayAnimations(false);
          frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
          listView.setOnItemClickListener((view, position, x, y) -> {
@@ -1947,15 +2010,17 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                  SharedPreferences preferences = MessagesController.getGlobalMainSettings();
                  boolean animations = preferences.getBoolean("view_animations", true);
                  SharedPreferences.Editor editor = preferences.edit();
-@@ -2172,7 +2198,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2172,8 +2208,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          private final static int TYPE_THEME_PREVIEW = 16;
          private final static int TYPE_DEFAULT_THEMES_PREVIEW = 17;
          private final static int TYPE_SAVE_TO_GALLERY = 19;
 -        private final static int TYPE_APP_ICON = 20;
          private final static int TYPE_CHOOSE_COLOR = 21;
++        private final static int TYPE_APP_ICONS = 22;
  
          private Context mContext;
-@@ -2192,7 +2217,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+         private boolean first = true;
+@@ -2192,7 +2228,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
              int type = holder.getItemViewType();
              return type == 0 || type == TYPE_TEXT_SETTING || type == TYPE_THEME_TYPE || type == TYPE_TEXT_CHECK ||
                      type == TYPE_NIGHT_THEME || type == TYPE_THEME_LIST || type == TYPE_THEME_ACCENT_LIST ||
@@ -1964,7 +2029,17 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
          }
  
          private void showOptionsForTheme(Theme.ThemeInfo themeInfo) {
-@@ -2567,9 +2592,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2389,6 +2425,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+                 case TYPE_NIGHT_THEME:
+                     view = new NotificationsCheckCell(mContext, 21, 60, true);
+                     break;
++                case TYPE_APP_ICONS:
++                    view = new AppIconsSelectorCell(mContext, ThemeActivity.this, currentAccount);
++                    break;
+                 case TYPE_THEME_LIST:
+                     first = true;
+                     themesHorizontalListCell = new ThemesHorizontalListCell(mContext, ThemeActivity.this, currentType, defaultThemes, darkThemes) {
+@@ -2567,9 +2606,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  case TYPE_SAVE_TO_GALLERY:
                      view = new RadioButtonCell(mContext);
                      break;
@@ -1974,7 +2049,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                  case TYPE_CHOOSE_COLOR:
                      view = new PeerColorActivity.ChangeNameColorCell(currentAccount, 0, mContext, getResourceProvider());
                      break;
-@@ -2582,7 +2604,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2582,7 +2618,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
              switch (holder.getItemViewType()) {
                  case TYPE_TEXT_SETTING: {
                      TextSettingsCell cell = (TextSettingsCell) holder.itemView;
@@ -1986,7 +2061,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                          if (Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_NONE || Theme.getCurrentNightTheme() == null) {
                              cell.setTextAndValue(getString(R.string.AutoNightTheme), getString(R.string.AutoNightThemeOff), false);
                          } else {
-@@ -2598,6 +2623,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2598,6 +2637,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                          cell.setTextAndValue(getString("AutoNightTo", R.string.AutoNightTo), String.format("%02d:%02d", currentHour, currentMinute), false);
                      } else if (position == scheduleUpdateLocationRow) {
                          cell.setTextAndValue(getString("AutoNightUpdateLocation", R.string.AutoNightUpdateLocation), Theme.autoNightCityName, false);
@@ -1997,7 +2072,16 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                      } else if (position == contactsSortRow) {
                          String value;
                          SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-@@ -2690,8 +2719,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2682,6 +2725,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+                         }
+                     } else if (position == textSizeHeaderRow) {
+                         headerCell.setText(getString("TextSizeHeader", R.string.TextSizeHeader));
++                    } else if (position == telegramRAppIconsHeaderRow) {
++                        headerCell.setText(getString(R.string.TelegramRAppIcons));
+                     } else if (position == chatListHeaderRow) {
+                         headerCell.setText(getString("ChatList", R.string.ChatList));
+                     } else if (position == bubbleRadiusHeaderRow) {
+@@ -2690,8 +2735,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                          headerCell.setText(getString("ChatListSwipeGesture", R.string.ChatListSwipeGesture));
                      } else if (position == selectThemeHeaderRow) {
                          headerCell.setText(getString("SelectTheme", R.string.SelectTheme));
@@ -2006,7 +2090,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                      } else if (position == otherHeaderRow) {
                          headerCell.setText(getString("OtherSettings", R.string.OtherSettings));
                      } else if (position == mediaSoundHeaderRow) {
-@@ -2842,13 +2869,13 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2842,21 +2885,21 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
              if (position == scheduleFromRow || position == distanceRow ||
                      position == scheduleToRow || position == scheduleUpdateLocationRow ||
                      position == contactsReimportRow || position == contactsSortRow ||
@@ -2022,16 +2106,26 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
                      position == mediaSoundSectionRow || position == otherSectionRow) {
                  return TYPE_SHADOW;
              } else if (position == nightDisabledRow || position == nightScheduledRow || position == nightAutomaticRow || position == nightSystemDefaultRow) {
-@@ -2856,7 +2883,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+                 return TYPE_THEME_TYPE;
              } else if (position == scheduleHeaderRow || position == automaticHeaderRow || position == preferedHeaderRow ||
                      position == settingsRow || position == themeHeaderRow || position == textSizeHeaderRow ||
-                     position == chatListHeaderRow || position == bubbleRadiusHeaderRow || position == swipeGestureHeaderRow ||
+-                    position == chatListHeaderRow || position == bubbleRadiusHeaderRow || position == swipeGestureHeaderRow ||
 -                    position == selectThemeHeaderRow || position == appIconHeaderRow || position == mediaSoundHeaderRow ||
++                    position == telegramRAppIconsHeaderRow || position == chatListHeaderRow || position == bubbleRadiusHeaderRow || position == swipeGestureHeaderRow ||
 +                    position == selectThemeHeaderRow || position == mediaSoundHeaderRow ||
                      position == otherHeaderRow) {
                  return TYPE_HEADER;
              } else if (position == automaticBrightnessRow) {
-@@ -2888,8 +2915,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2873,6 +2916,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+                 return TYPE_NIGHT_THEME;
+             } else if (position == themeListRow) {
+                 return TYPE_THEME_LIST;
++            } else if (position == telegramRAppIconsRow) {
++                return TYPE_APP_ICONS;
+             } else if (position == themeAccentListRow) {
+                 return TYPE_THEME_ACCENT_LIST;
+             } else if (position == bubbleRadiusRow) {
+@@ -2888,8 +2933,6 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                  return TYPE_DEFAULT_THEMES_PREVIEW;
              } else if (position == saveToGalleryOption1Row || position == saveToGalleryOption2Row) {
                  return TYPE_SAVE_TO_GALLERY;
@@ -2040,7 +2134,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
              } else if (position == changeUserColor) {
                  return TYPE_CHOOSE_COLOR;
              }
-@@ -2907,7 +2932,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2907,7 +2950,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
      public ArrayList<ThemeDescription> getThemeDescriptions() {
          ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
  
@@ -2049,7 +2143,7 @@ index c964b5469a881d01bfa28ca18a1f160bc6cbd79b..4c5e473cb53de35bbe0e715d8a14e2da
  
          themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault));
  
-@@ -2945,38 +2970,28 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
+@@ -2945,38 +2988,28 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
          themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSizeCell.class}, null, null, null, Theme.key_chat_inTimeSelectedText));
          themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSizeCell.class}, null, null, null, Theme.key_chat_outTimeSelectedText));
  
@@ -7882,7 +7976,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..df761bba6f484ff8aa5e32c2b4a24f9a0460e983 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..21f41a4f2b1513c6ccbab7ddfc1a4cbfc613f3d6 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -7892,8 +7986,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..df761bba6f484ff8aa5e32c2b4a24f9a
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7307
-+APP_VERSION_NAME=13.2.2-telegramr.5
++APP_VERSION_CODE=7308
++APP_VERSION_NAME=13.2.2-telegramr.6
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android
