@@ -149,7 +149,7 @@ index 53e0fa790c74e8f13cb7e20ccc5f3e30f0a6c8c7..6e38bea1d4fee4e895acb7cdb0b9d21d
              </intent-filter>
          </activity-alias>
  
--        <meta-data android:name="com.google.android.maps.v2.API_KEY" android:value="AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k" />
+-        <meta-data android:name="com.google.android.maps.v2.API_KEY" android:value="GOOGLE_API_KEY_FROM_UPSTREAM" />
 +        <meta-data android:name="com.google.android.maps.v2.API_KEY" android:value="${telegramrMapsKey}" />
  
          <service
@@ -183,7 +183,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -212,7 +212,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -241,7 +241,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -405,7 +405,7 @@ index ca821813f7de19064ee4510e61ed438d1566b5b4..fcb3e22eb824c7ce79e43a7038d89a09
 +    public static String APP_HASH = BuildConfig.TELEGRAMR_API_HASH;
  
      // SafetyNet key for Google Identity SDK, set it to empty to disable
--    public static String SAFETYNET_KEY = "AIzaSyDqt8P-7F7CPCseMkOiVRgb1LY8RN1bvH8";
+-    public static String SAFETYNET_KEY = "GOOGLE_API_KEY_FROM_UPSTREAM";
 +    public static String SAFETYNET_KEY = "";
      public static String PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=org.telegram.messenger";
      public static String HUAWEI_STORE_URL = "https://appgallery.huawei.com/app/C101184875";
@@ -7443,7 +7443,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7472,7 +7472,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7501,7 +7501,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7548,7 +7548,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7577,7 +7577,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7606,7 +7606,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7653,7 +7653,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7682,7 +7682,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7711,7 +7711,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7864,7 +7864,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7893,7 +7893,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {
@@ -7922,7 +7922,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 -      ],
 -      "api_key": [
 -        {
--          "current_key": "AIzaSyA-t0jLPjUt2FxrA8VPK2EiYHcYcboIR6k"
+-          "current_key": "GOOGLE_API_KEY_FROM_UPSTREAM"
 -        }
 -      ],
 -      "services": {

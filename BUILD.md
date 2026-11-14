@@ -4,9 +4,9 @@ TelegramR — неофіційний клієнт на базі Telegram for And
 
 ## Збірка
 
-Потрібні Git, JDK 17, Android SDK 36, Build Tools 36.0.0 і 35.0.0, NDK 27.2.12479018, CMake 3.22.1 і Platform Tools. Для `x86` та `x86_64` додайте NASM у `PATH`. На Windows оберіть короткий шлях до проєкту, щоб залишити місце для шляхів об'єктних файлів CMake.
+Потрібні Git, Python 3, JDK 17, Android SDK 36, Build Tools 36.0.0 і 35.0.0, NDK 27.2.12479018, CMake 3.22.1 і Platform Tools. Для `x86` та `x86_64` додайте NASM у `PATH`. На Windows оберіть короткий шлях до проєкту, щоб залишити місце для шляхів об'єктних файлів CMake.
 
-Покладіть `TelegramR-source.patch` у поточну папку. Команди PowerShell
+Розпакуйте файли релізу в поточну папку. Команди PowerShell
 
 ```powershell
 git init TelegramR
@@ -15,7 +15,10 @@ git -C TelegramR config core.autocrlf false
 git -C TelegramR remote add upstream https://github.com/DrKLO/Telegram.git
 git -C TelegramR fetch --depth=1 upstream 21f7d109da6ab3506c9e9577f98c6a38771ab335
 git -C TelegramR switch --detach FETCH_HEAD
-git -C TelegramR apply --index ../TelegramR-source.patch
+Push-Location TelegramR
+python ../prepare-upstream.py
+Pop-Location
+git -C TelegramR apply ../TelegramR-source.patch
 git -C TelegramR submodule update --init --recursive --depth=1
 Set-Location TelegramR
 ```
