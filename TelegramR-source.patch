@@ -2029,10 +2029,10 @@ index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..5d64e29fe1e7f86adcf6cb79f5be891c
                      new SearchResult(327, getString(R.string.RaiseToListen), "raiseToListenRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/data/raise-to-listen"),
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ca4b5ee82801783747c96ed6367c6800653b5af5
+index 0000000000000000000000000000000000000000..6668d6ca08c3d1110b2f5b20f69244a8bc856088
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
-@@ -0,0 +1,143 @@
+@@ -0,0 +1,138 @@
 +/*
 + * TelegramR modifications to Telegram for Android.
 + * Licensed under GNU GPL v. 2 or later. See LICENSE.
@@ -2061,7 +2061,6 @@ index 0000000000000000000000000000000000000000..ca4b5ee82801783747c96ed6367c6800
 +    private static final int HIDE_TYPING = 5;
 +    private static final int DELAY = 6;
 +    private static final int OBSERVED = 7;
-+    private static final int THEMES = 9;
 +    private static final int HIDE_STORIES = 10;
 +    private static final int HISTORY = 11;
 +    private static final int CLEAR_HISTORY = 12;
@@ -2123,7 +2122,6 @@ index 0000000000000000000000000000000000000000..ca4b5ee82801783747c96ed6367c6800
 +        items.add(UItem.asHeader(getString(R.string.TelegramRAppearance)));
 +        items.add(UItem.asCheck(HIDE_STORIES, getString(R.string.TelegramRHideStories))
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HIDE_STORIES)));
-+        items.add(UItem.asButton(THEMES, getString(R.string.TelegramRThemes)));
 +    }
 +
 +    private void addPrivacy(ArrayList<UItem> items, int id, int label, int description,
@@ -2144,9 +2142,6 @@ index 0000000000000000000000000000000000000000..ca4b5ee82801783747c96ed6367c6800
 +                            getMessagesStorage().getStorageQueue().postRunnable(() ->
 +                                    org.telegram.messenger.TelegramRHistory.clear(owner)))
 +                    .create());
-+            return;
-+        } else if (item.id == THEMES) {
-+            presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
 +            return;
 +        } else if (item.id == HISTORY) {
 +            TelegramRSettings.toggleOption(currentAccount, TelegramRSettings.HISTORY);
@@ -7509,10 +7504,10 @@ index 0000000000000000000000000000000000000000..b1ca092e560dae1d552e600f3dc801a7
 +</vector>
 diff --git a/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..b87e3a6444827a6250728390d77dfd39dad7e4da
+index 0000000000000000000000000000000000000000..97225b7025b227cfd982964eaf37bbfc901ddbac
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,57 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRGhostActive">Режим невидимки включён</string>
@@ -7531,7 +7526,6 @@ index 0000000000000000000000000000000000000000..b87e3a6444827a6250728390d77dfd39
 +    <string name="TelegramRSizeDefault">Стандартный</string>
 +    <string name="TelegramRSizeLarge">Больше</string>
 +    <string name="TelegramRSizeLargest">Самый большой</string>
-+    <string name="TelegramRThemes">Темы Telegram</string>
 +    <string name="TelegramRAppIcons">Значки приложения</string>
 +    <string name="TelegramRExtra">Дополнительно</string>
 +    <string name="TelegramRPrivacy">Невидимка</string>
@@ -7573,10 +7567,10 @@ index 0000000000000000000000000000000000000000..b87e3a6444827a6250728390d77dfd39
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..7cb580b31fdf88a173be457fd2166b79ca93a100
+index 0000000000000000000000000000000000000000..eeb18b88c6bb8651c19627dbd2510fc694018e6f
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,57 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Вигляд чатів</string>
@@ -7620,7 +7614,6 @@ index 0000000000000000000000000000000000000000..7cb580b31fdf88a173be457fd2166b79
 +    <string name="TelegramRSizeSmall">Менший</string>
 +    <string name="TelegramRSizeDefault">Стандартний</string>
 +    <string name="TelegramRSizeLarge">Більший</string>
-+    <string name="TelegramRThemes">Теми Telegram</string>
 +    <string name="TelegramRAppIcons">Іконки застосунку</string>
 +    <string name="TelegramRSizeSmallest">Найменший</string>
 +    <string name="TelegramRSizeLargest">Найбільший</string>
@@ -7637,10 +7630,10 @@ index 0000000000000000000000000000000000000000..7cb580b31fdf88a173be457fd2166b79
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values/strings_telegramr.xml b/TMessagesProj/src/main/res/values/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..38483d39d9ed6086a9050e286d313bebdf5ad731
+index 0000000000000000000000000000000000000000..9d2c726b407c1438f616c7523d3301172ea1900f
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values/strings_telegramr.xml
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,57 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Chat layout</string>
@@ -7684,7 +7677,6 @@ index 0000000000000000000000000000000000000000..38483d39d9ed6086a9050e286d313beb
 +    <string name="TelegramRSizeSmall">Smaller</string>
 +    <string name="TelegramRSizeDefault">Default</string>
 +    <string name="TelegramRSizeLarge">Larger</string>
-+    <string name="TelegramRThemes">Telegram themes</string>
 +    <string name="TelegramRAppIcons">App icons</string>
 +    <string name="TelegramRSizeSmallest">Smallest</string>
 +    <string name="TelegramRSizeLargest">Largest</string>
@@ -8332,7 +8324,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ed35b27bbec5b77eeab4bda2e90cf178a2e9c12d 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..a0b623abd331b006b3f4a41093a1cd01bd3cffbb 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -8342,8 +8334,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ed35b27bbec5b77eeab4bda2e90cf178
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7310
-+APP_VERSION_NAME=13.2.2-telegramr.8
++APP_VERSION_CODE=7311
++APP_VERSION_NAME=13.2.2-telegramr.9
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android
