@@ -129,7 +129,7 @@ z!c<^<FbJ4JoSq!WNdW*s&1tWmk#K;5#^#rwh`tPOhCa+`fS|vW#JNVGG}<HSsekm-
 Q*ZADrHu?%ACqozg1?gqT+W-In
 
 diff --git a/TMessagesProj/config/release/AndroidManifest_standalone.xml b/TMessagesProj/config/release/AndroidManifest_standalone.xml
-index 53e0fa790c74e8f13cb7e20ccc5f3e30f0a6c8c7..6e38bea1d4fee4e895acb7cdb0b9d21d24681ec7 100644
+index 9b0fbaf7156afd3cffaca81a83d252f79f4013e4..6e38bea1d4fee4e895acb7cdb0b9d21d24681ec7 100644
 --- a/TMessagesProj/config/release/AndroidManifest_standalone.xml
 +++ b/TMessagesProj/config/release/AndroidManifest_standalone.xml
 @@ -34,9 +34,9 @@
@@ -156,7 +156,7 @@ index 53e0fa790c74e8f13cb7e20ccc5f3e30f0a6c8c7..6e38bea1d4fee4e895acb7cdb0b9d21d
              android:name="org.telegram.messenger.GcmPushListenerService" android:exported="true">
 diff --git a/TMessagesProj/google-services.json b/TMessagesProj/google-services.json
 deleted file mode 100644
-index 640e841b2d2e2a72fe79193ea0130161fb291b2a..0000000000000000000000000000000000000000
+index 03ecced28f2a532610aaaedecaeef493603e658c..0000000000000000000000000000000000000000
 --- a/TMessagesProj/google-services.json
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -387,7 +387,7 @@ index d59b29a66c618169c229d2f16f847cb2d5a2300b..0860ef232070fb634ea3e411d52d7f97
  
      public static boolean isTabletInternal() {
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java b/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-index ca821813f7de19064ee4510e61ed438d1566b5b4..fcb3e22eb824c7ce79e43a7038d89a096a2750db 100644
+index 7af32f419ee24517c6f1db0a44fa6bf2cc074bdd..fcb3e22eb824c7ce79e43a7038d89a096a2750db 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
 @@ -22,29 +22,29 @@ public class BuildVars {
@@ -511,7 +511,7 @@ index 3a5413ce1fd15b3be5ee7eea8adf361f5836a8ff..e339e3320c8c9954cfc2d046d2f6d4ad
          String value;
  
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-index ec7683573bfeb138cd0daa50d9af9cf865eee77d..507f53f5feb353be2303957199aa9d16bb169d73 100644
+index ec7683573bfeb138cd0daa50d9af9cf865eee77d..19b6d2dd531a20fb0ec0b72ec4029bb7a8376bb5 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 @@ -10546,6 +10546,23 @@ public class MessagesController extends BaseController implements NotificationCe
@@ -591,7 +591,26 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..507f53f5feb353be2303957199aa9d16
                          interfaceUpdateMask |= UPDATE_MASK_STATUS;
                      }
                  }
-@@ -20037,6 +20066,9 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -19933,7 +19962,17 @@ public class MessagesController extends BaseController implements NotificationCe
+                 for (int a = 0, size2 = messageObjects.size(); a < size2; a++) {
+                     messagesRes.messages.add(messageObjects.get(a).messageOwner);
+                 }
+-                getMessagesStorage().putMessages(messagesRes, editingMessages.keyAt(b), -2, 0, false, 0, 0);
++                final long editedDialog = editingMessages.keyAt(b);
++                if (TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)) {
++                    getMessagesStorage().getStorageQueue().postRunnable(() -> {
++                        for (TLRPC.Message edited : messagesRes.messages) {
++                            ArrayList<Integer> ids = new ArrayList<>();
++                            ids.add(edited.id);
++                            getMessagesStorage().archiveTelegramRMessages(editedDialog, ids, edited.message, false);
++                        }
++                    });
++                }
++                getMessagesStorage().putMessages(messagesRes, editedDialog, -2, 0, false, 0, 0);
+             }
+             LongSparseArray<ArrayList<MessageObject>> editingMessagesFinal = editingMessages;
+             getMessagesStorage().getStorageQueue().postRunnable(() -> AndroidUtilities.runOnUIThread(() -> {
+@@ -20037,6 +20076,9 @@ public class MessagesController extends BaseController implements NotificationCe
                          dbUsersStatus.add(toDbUser);
                          if (update.user_id == getUserConfig().getClientUserId()) {
                              getNotificationsController().setLastOnlineFromOtherDevice(update.status.expires);
@@ -601,6 +620,71 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..507f53f5feb353be2303957199aa9d16
                          }
                      } else if (baseUpdate instanceof TL_update.TL_updateMonoForumNoPaidException) {
                          TL_update.TL_updateMonoForumNoPaidException update = (TL_update.TL_updateMonoForumNoPaidException) baseUpdate;
+@@ -21329,6 +21371,7 @@ public class MessagesController extends BaseController implements NotificationCe
+                 long key = deletedMessages.keyAt(a);
+                 ArrayList<Integer> arrayList = deletedMessages.valueAt(a);
+                 getMessagesStorage().getStorageQueue().postRunnable(() -> {
++                    getMessagesStorage().archiveTelegramRMessages(key, arrayList, null, true);
+                     ArrayList<Long> dialogIds = getMessagesStorage().markMessagesAsDeleted(key, arrayList, false, true, 0, 0);
+                     getMessagesStorage().updateDialogsWithDeletedMessages(key, -key, arrayList, dialogIds);
+                 });
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java
+index 07716f345ac1fb5a9aa551497c8773c4fbb1093b..18f462c847b6c3e89ca14839ebcd99742e67cb50 100644
+--- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java
+@@ -16261,6 +16261,52 @@ public class MessagesStorage extends BaseController {
+     }
+ 
+     // put messages in data base while load history
++    void archiveTelegramRMessages(long dialogId, ArrayList<Integer> ids, String replacement, boolean deleted) {
++        if (!TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)
++                || ids.isEmpty() || DialogObject.isEncryptedDialog(dialogId)) {
++            return;
++        }
++        ArrayList<org.json.JSONObject> records = new ArrayList<>();
++        for (int start = 0; start < ids.size(); start += 100) {
++            SQLiteCursor cursor = null;
++            try {
++                String mids = TextUtils.join(",", ids.subList(start, Math.min(start + 100, ids.size())));
++                String peer = dialogId == 0 ? " AND is_channel = 0" : " AND uid = " + dialogId;
++                cursor = database.queryFinalized("SELECT uid, data FROM messages_v2 WHERE mid IN(" + mids + ")" + peer);
++                while (cursor.next()) {
++                    long uid = cursor.longValue(0);
++                    if (DialogObject.isEncryptedDialog(uid)) {
++                        continue;
++                    }
++                    NativeByteBuffer data = cursor.byteBufferValue(1);
++                    if (data == null) {
++                        continue;
++                    }
++                    TLRPC.Message message;
++                    try {
++                        message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
++                    } finally {
++                        data.reuse();
++                    }
++                    if (message == null || message.out || message.noforwards || message.ttl_period != 0
++                            || !(message instanceof TLRPC.TL_message) || TextUtils.isEmpty(message.message)
++                            || message.message.length() > 8192 || TextUtils.equals(message.message, replacement)) {
++                        continue;
++                    }
++                    records.add(new org.json.JSONObject().put("dialog", uid).put("id", message.id)
++                            .put("saved", System.currentTimeMillis()).put("deleted", deleted).put("text", message.message));
++                }
++            } catch (Exception error) {
++                FileLog.e(error);
++            } finally {
++                if (cursor != null) {
++                    cursor.dispose();
++                }
++            }
++        }
++        TelegramRHistory.append(getUserConfig().getClientUserId(), records);
++    }
++
+     public void putMessages(TLRPC.messages_Messages messages, long dialogId, int load_type, int max_id, boolean createDialog, int mode, long threadMessageId) {
+         storageQueue.postRunnable(() -> {
+             SQLitePreparedStatement state_messages = null;
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java b/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java
 index 55452d3d69f26b585c77ffb97fdb353c2e15188e..300afba0612bf751b3ac2adfb74321e5a7762d0f 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java
@@ -625,12 +709,154 @@ index 55452d3d69f26b585c77ffb97fdb353c2e15188e..300afba0612bf751b3ac2adfb74321e5
          int scheduleDate = sendMessageParams.scheduleDate;
          int scheduleRepeatPeriod = sendMessageParams.scheduleRepeatPeriod;
          int ttl = sendMessageParams.ttl;
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRHistory.java b/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRHistory.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3fe8cb5efc80c8e86e308924eefca5cb2ef90237
+--- /dev/null
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRHistory.java
+@@ -0,0 +1,136 @@
++package org.telegram.messenger;
++
++import android.security.keystore.KeyGenParameterSpec;
++import android.security.keystore.KeyProperties;
++import android.util.AtomicFile;
++import android.util.Base64;
++
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++import java.io.File;
++import java.io.FileOutputStream;
++import java.nio.charset.StandardCharsets;
++import java.security.KeyStore;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Locale;
++
++import javax.crypto.Cipher;
++import javax.crypto.KeyGenerator;
++import javax.crypto.SecretKey;
++import javax.crypto.spec.GCMParameterSpec;
++
++/** Text-only, account-local archive. Access on the messages storage queue. */
++public final class TelegramRHistory {
++    private static final int LIMIT = 500;
++    private static final long RETENTION = 30L * 24 * 60 * 60 * 1000;
++
++    private TelegramRHistory() {}
++
++    private static AtomicFile file(long owner) {
++        return new AtomicFile(new File(ApplicationLoader.getFilesDirFixed(), "telegramr-history-" + owner));
++    }
++
++    private static SecretKey key(long owner) throws Exception {
++        String alias = "telegramr-history-" + owner;
++        KeyStore store = KeyStore.getInstance("AndroidKeyStore");
++        store.load(null);
++        SecretKey key = (SecretKey) store.getKey(alias, null);
++        if (key != null) {
++            return key;
++        }
++        KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
++        generator.init(new KeyGenParameterSpec.Builder(alias,
++                KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
++                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
++                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
++                .build());
++        return generator.generateKey();
++    }
++
++    private static JSONArray read(long owner) throws Exception {
++        AtomicFile file = file(owner);
++        if (!file.getBaseFile().exists() && !new File(file.getBaseFile().getPath() + ".bak").exists()) {
++            return new JSONArray();
++        }
++        JSONObject wrapper = new JSONObject(new String(file.readFully(), StandardCharsets.UTF_8));
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(Cipher.DECRYPT_MODE, key(owner), new GCMParameterSpec(128,
++                Base64.decode(wrapper.getString("iv"), Base64.NO_WRAP)));
++        return new JSONArray(new String(cipher.doFinal(Base64.decode(wrapper.getString("data"),
++                Base64.NO_WRAP)), StandardCharsets.UTF_8));
++    }
++
++    private static void write(long owner, JSONArray entries) throws Exception {
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(Cipher.ENCRYPT_MODE, key(owner));
++        JSONObject wrapper = new JSONObject()
++                .put("iv", Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP))
++                .put("data", Base64.encodeToString(cipher.doFinal(entries.toString()
++                        .getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP));
++        AtomicFile file = file(owner);
++        FileOutputStream stream = file.startWrite();
++        try {
++            stream.write(wrapper.toString().getBytes(StandardCharsets.UTF_8));
++            file.finishWrite(stream);
++        } catch (Exception error) {
++            file.failWrite(stream);
++            throw error;
++        }
++    }
++
++    static void append(long owner, List<JSONObject> records) {
++        if (owner == 0 || records.isEmpty()) {
++            return;
++        }
++        try {
++            JSONArray entries = prune(read(owner));
++            for (JSONObject record : records) {
++                entries.put(record);
++            }
++            write(owner, prune(entries));
++        } catch (Exception error) {
++            FileLog.e(error);
++        }
++    }
++
++    private static JSONArray prune(JSONArray entries) throws Exception {
++        JSONArray result = new JSONArray();
++        long cutoff = System.currentTimeMillis() - RETENTION;
++        for (int i = Math.max(0, entries.length() - LIMIT); i < entries.length(); i++) {
++            JSONObject entry = entries.getJSONObject(i);
++            if (entry.getLong("saved") >= cutoff) {
++                result.put(entry);
++            }
++        }
++        return result;
++    }
++
++    public static List<JSONObject> search(long owner, long dialogId, String query) throws Exception {
++        ArrayList<JSONObject> result = new ArrayList<>();
++        if (owner == 0) {
++            return result;
++        }
++        JSONArray stored = read(owner);
++        JSONArray entries = prune(stored);
++        if (stored.length() != entries.length()) {
++            write(owner, entries);
++        }
++        String needle = query.toLowerCase(Locale.ROOT);
++        for (int i = entries.length() - 1; i >= 0; i--) {
++            JSONObject entry = entries.getJSONObject(i);
++            if (entry.getLong("dialog") == dialogId
++                    && entry.getString("text").toLowerCase(Locale.ROOT).contains(needle)) {
++                result.add(entry);
++            }
++        }
++        return result;
++    }
++
++    public static void clear(long owner) {
++        if (owner != 0) {
++            file(owner).delete();
++        }
++    }
++}
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRSettings.java b/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRSettings.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ea46d5d5ca184b273cd482889160db29dcbed3ed
+index 0000000000000000000000000000000000000000..ba11aabe0d289b2c55cae8e241a9958c91fd2c14
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/TelegramRSettings.java
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,122 @@
 +/*
 + * TelegramR modifications to Telegram for Android.
 + * Licensed under GNU GPL v. 2 or later. See LICENSE.
@@ -708,6 +934,8 @@ index 0000000000000000000000000000000000000000..ea46d5d5ca184b273cd482889160db29
 +
 +    public static final String DELAY = "delayText";
 +    public static final String OBSERVED = "observedActivity";
++    public static final String HIDE_STORIES = "hideStoriesHeader";
++    public static final String HISTORY = "messageHistory";
 +
 +    public static void saveOwnActivity(int account, int time) {
 +        if (time > ownActivity(account)) {
@@ -812,7 +1040,7 @@ index 698bf4d5d0417222b2579219eb725a36d732e016..b183f29fc350fa3b88c37848c352d098
              tagsRight = getMeasuredWidth() - dp(messagePaddingStart);
              tagsLeft = dp(64);
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
-index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e39121767790f48ac6 100644
+index a54b1341e95280ef1e5b1f381833a639700d0f00..0914dc9ecde813b2334631cc13b69bd51327a2e8 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 @@ -192,6 +192,7 @@ import org.telegram.messenger.SharedConfig;
@@ -823,13 +1051,14 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
  import org.telegram.messenger.UserConfig;
  import org.telegram.messenger.UserObject;
  import org.telegram.messenger.Utilities;
-@@ -1297,6 +1298,26 @@ public class ChatActivity extends BaseFragment implements
+@@ -1297,6 +1298,27 @@ public class ChatActivity extends BaseFragment implements
      public final static int OPTION_WELCOME_REVERT = 116;
      public final static int OPTION_SEND_MONEY = 117;
      public final static int OPTION_STOP_LIVE_LOCATION = 118;
 +    private static final int TELEGRAMR_CHAT_SEND_OPTIONS = 981;
 +    private static final int TELEGRAMR_CHANNEL_BAR = 982;
 +    private static final int TELEGRAMR_READ_ALL = 983;
++    private static final int TELEGRAMR_HISTORY = 985;
 +    private ActionBarMenuItem.Item telegramRChannelBarItem;
 +
 +    private boolean canToggleTelegramRChannelBar() {
@@ -850,7 +1079,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
  
      private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
              NotificationCenter.messagesRead,
-@@ -3014,11 +3035,13 @@ public class ChatActivity extends BaseFragment implements
+@@ -3014,11 +3036,13 @@ public class ChatActivity extends BaseFragment implements
  
                  if (startLoadFromMessageId == 0) {
                      SharedPreferences sharedPreferences = MessagesController.getNotificationsSettings(currentAccount);
@@ -866,12 +1095,14 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
                          startLoadFromMessageId = messageId;
                      }
                  } else {
-@@ -4050,6 +4073,14 @@ public class ChatActivity extends BaseFragment implements
+@@ -4050,6 +4074,16 @@ public class ChatActivity extends BaseFragment implements
                      openTopicsPanel();
                  } else if (id == chat_menu_topic_create) {
                      presentFragment(TopicCreateFragment.create(-dialog_id, 0).setOpenInChatActivity(ChatActivity.this));
 +                } else if (id == TELEGRAMR_CHAT_SEND_OPTIONS) {
 +                    showTelegramRSendingOptions();
++                } else if (id == TELEGRAMR_HISTORY) {
++                    showTelegramRHistory();
 +                } else if (id == TELEGRAMR_READ_ALL) {
 +                    markTelegramRConversationRead(null);
 +                } else if (id == TELEGRAMR_CHANNEL_BAR && canToggleTelegramRChannelBar()) {
@@ -881,11 +1112,15 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
                  } else if (id == 888) {
                      dumpCanvas();
                  } else if (id == 889) {
-@@ -4520,6 +4551,20 @@ public class ChatActivity extends BaseFragment implements
+@@ -4520,6 +4554,24 @@ public class ChatActivity extends BaseFragment implements
              }
          }
  
 +        if (headerItem != null && chatMode == MODE_DEFAULT && currentEncryptedChat == null && !isReport()) {
++            if (TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)) {
++                headerItem.lazilyAddSubItem(TELEGRAMR_HISTORY, R.drawable.telegramr_eye,
++                        getString(R.string.TelegramRHistory));
++            }
 +            headerItem.lazilyAddSubItem(TELEGRAMR_READ_ALL, R.drawable.msg_markread,
 +                    getString(R.string.TelegramRReadAll));
 +            headerItem.lazilyAddSubItem(TELEGRAMR_CHAT_SEND_OPTIONS, R.drawable.msg_mute,
@@ -902,7 +1137,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          if (BuildConfig.DEBUG_PRIVATE_VERSION && headerItem != null) {
              headerItem.lazilyAddSubItem(888, R.drawable.menu_download_round, "Dump Canvas");
          }
-@@ -8416,7 +8461,15 @@ public class ChatActivity extends BaseFragment implements
+@@ -8416,7 +8468,15 @@ public class ChatActivity extends BaseFragment implements
              @Override
              public void setVisibility(int visibility) {
                  super.setVisibility(visibility);
@@ -919,7 +1154,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
              }
          };
          bottomChannelButtonsLayout.setVisibility(View.INVISIBLE);
-@@ -17230,7 +17283,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -17230,7 +17290,9 @@ public class ChatActivity extends BaseFragment implements
          }
          updateFloatingTopicView();
          invalidateChatListViewTopPadding();
@@ -930,7 +1165,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
              int scheduledRead = 0;
              if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE)) {
                  int counterDecrement = 0;
-@@ -19655,6 +19710,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -19655,6 +19717,9 @@ public class ChatActivity extends BaseFragment implements
      }
  
      private void checkActionBarMenu(boolean animated) {
@@ -940,7 +1175,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat) ||
                  currentChat != null && (chatMode != 0 || threadMessageId != 0 || chatInfo == null || chatInfo.ttl_period == 0) ||
                  currentUser != null && (UserObject.isDeleted(currentUser) || currentEncryptedChat == null && (userInfo == null || userInfo.ttl_period == 0))) {
-@@ -21453,7 +21511,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -21453,7 +21518,9 @@ public class ChatActivity extends BaseFragment implements
  
              resumeDelayedFragmentAnimation();
              MessageObject messageObject = messArr.get(0);
@@ -951,7 +1186,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
              AndroidUtilities.cancelRunOnUIThread(fragmentTransitionRunnable);
              fragmentTransitionRunnable.run();
              return;
-@@ -28926,6 +28986,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -28926,6 +28993,7 @@ public class ChatActivity extends BaseFragment implements
          bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIFT, showGiftButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
          bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIGA_GROUP_INFO, showGigaGroupButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
  
@@ -959,7 +1194,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          checkRaiseSensors();
      }
  
-@@ -30872,9 +30933,36 @@ public class ChatActivity extends BaseFragment implements
+@@ -30872,9 +30940,36 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -996,7 +1231,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          scrolling = false;
          if (scrimPopupWindow != null) {
              scrimPopupWindow.setPauseNotifications(false);
-@@ -34293,6 +34381,10 @@ public class ChatActivity extends BaseFragment implements
+@@ -34293,6 +34388,10 @@ public class ChatActivity extends BaseFragment implements
          }
          boolean preserveDim = false;
          switch (option) {
@@ -1007,7 +1242,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
              case OPTION_RETRY: {
                  final MessageObject object = selectedObject;
                  final MessageObject.GroupedMessages group = selectedObjectGroup;
-@@ -47104,6 +47196,14 @@ public class ChatActivity extends BaseFragment implements
+@@ -47104,6 +47203,14 @@ public class ChatActivity extends BaseFragment implements
              icons.add(sendMoneyIndex, R.drawable.ic_gram);
          }
  
@@ -1022,7 +1257,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          if (showWelcomeMessageRevertOption(primaryMessage)) {
              items.add(getString(R.string.WelcomeMessageRevert));
              options.add(OPTION_WELCOME_REVERT);
-@@ -47111,6 +47211,66 @@ public class ChatActivity extends BaseFragment implements
+@@ -47111,6 +47218,122 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -1064,6 +1299,62 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
 +        }
 +    }
 +
++    private void showTelegramRHistory() {
++        if (getParentActivity() == null || !TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)) {
++            return;
++        }
++        final long owner = getUserConfig().getClientUserId();
++        final long peer = dialog_id;
++        final android.widget.EditText field = new android.widget.EditText(getParentActivity());
++        field.setSingleLine();
++        field.setHint(getString(R.string.Search));
++        showDialog(new AlertDialog.Builder(getParentActivity(), getResourceProvider())
++                .setTitle(getString(R.string.TelegramRHistory))
++                .setView(field)
++                .setPositiveButton(getString(R.string.Search), (dialog, which) -> {
++                    final String query = field.getText().toString().trim();
++                    getMessagesStorage().getStorageQueue().postRunnable(() -> {
++                        final ArrayList<CharSequence> titles = new ArrayList<>();
++                        final ArrayList<String> texts = new ArrayList<>();
++                        boolean failed = false;
++                        try {
++                            for (org.json.JSONObject record : org.telegram.messenger.TelegramRHistory.search(owner, peer, query)) {
++                                String text = record.getString("text");
++                                String preview = text.replace('\n', ' ');
++                                if (preview.length() > 75) {
++                                    preview = preview.substring(0, 75) + "…";
++                                }
++                                titles.add(getString(record.getBoolean("deleted") ? R.string.TelegramRDeleted : R.string.TelegramRPreviousEdit)
++                                        + " · " + preview);
++                                texts.add(text);
++                            }
++                        } catch (Exception error) {
++                            FileLog.e(error);
++                            failed = true;
++                        }
++                        final boolean loadFailed = failed;
++                        AndroidUtilities.runOnUIThread(() -> {
++                            if (getParentActivity() == null || !TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)) {
++                                return;
++                            }
++                            AlertDialog.Builder list = new AlertDialog.Builder(getParentActivity(), getResourceProvider())
++                                    .setTitle(getString(R.string.TelegramRHistory));
++                            if (titles.isEmpty()) {
++                                list.setMessage(getString(loadFailed ? R.string.TelegramRHistoryError : R.string.TelegramRHistoryEmpty));
++                            } else {
++                                list.setItems(titles.toArray(new CharSequence[0]), (d, index) -> showDialog(
++                                        new AlertDialog.Builder(getParentActivity(), getResourceProvider())
++                                                .setTitle(titles.get(index)).setMessage(texts.get(index))
++                                                .setPositiveButton(getString(R.string.OK), null).create()));
++                            }
++                            showDialog(list.setNegativeButton(getString(R.string.Close), null).create());
++                        });
++                    });
++                })
++                .setNegativeButton(getString(R.string.Cancel), null)
++                .create());
++    }
++
 +    private void showTelegramRSendingOptions() {
 +        if (getParentActivity() == null) {
 +            return;
@@ -1089,7 +1380,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
      private boolean showWelcomeMessageRevertOption(MessageObject messageObject) {
          return chatMode == MODE_DEFAULT && messageObject != null && messageObject.isWelcomeAnchored();
      }
-@@ -47176,6 +47336,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -47176,6 +47399,9 @@ public class ChatActivity extends BaseFragment implements
              pollAddVisibility = animatorPollAddAnswerVisibility.getFloatValue();
          }
  
@@ -1099,7 +1390,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
          if (!isInsideContainer && !isInPreviewMode()) {
              return lerp(Math.max(lerp(defaultIslandHeight, enterViewIslandHeight, enterViewFactor) * visibility, dp(44)), -dp(7), pollAddVisibility);
          } else {
-@@ -47455,8 +47618,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -47455,8 +47681,9 @@ public class ChatActivity extends BaseFragment implements
  
      private void checkBottomViewVisibility(View view, int containerId, boolean allowVisibilityChange) {
          if (view != null) {
@@ -1111,7 +1402,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..88cd5c7685bf54e68dc444e391217677
                  * (1f - animatorPollAddAnswerVisibility.getFloatValue());
  
              view.setAlpha(alpha);
-@@ -47497,8 +47661,11 @@ public class ChatActivity extends BaseFragment implements
+@@ -47497,8 +47724,11 @@ public class ChatActivity extends BaseFragment implements
              bottomOverlay.setTranslationY(dp(54) * hideFactor);
          }
          if (chatInputViewsContainer != null) {
@@ -1310,35 +1601,8 @@ index 266e5709fb3bc95fc81cd535a9433734c2a04a87..775d3a238ff6ed1f5b9ac47c22ce18c4
                      }
                  } else {
                      messageTransitionIsRunning = false;
-diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java b/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
-index c4bb8eca72e88c2304f47d87d27cd957e07ade18..c67ec7e445925df86e4118e6c45478c3b929edfc 100644
---- a/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
-+++ b/TMessagesProj/src/main/java/org/telegram/ui/Components/ChatAvatarContainer.java
-@@ -47,6 +47,7 @@ import org.telegram.messenger.ImageLoader;
- import org.telegram.messenger.ImageReceiver;
- import org.telegram.messenger.LocaleController;
- import org.telegram.messenger.MessagesController;
-+import org.telegram.messenger.TelegramRSettings;
- import org.telegram.messenger.NotificationCenter;
- import org.telegram.messenger.R;
- import org.telegram.messenger.UserConfig;
-@@ -1245,6 +1246,14 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
-                     isOnline[0] = false;
-                     newStatus = LocaleController.formatUserStatus(currentAccount, user, isOnline, allowShorterStatus ? statusMadeShorter : null);
-                     useOnlineColor = isOnline[0];
-+                    if (!useOnlineColor && user.status != null && user.status.expires <= 0
-+                            && TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED)) {
-+                        final int observed = MessagesController.getInstance(currentAccount).getTelegramRObservedActivity(user.id);
-+                        if (observed > 0) {
-+                            newStatus = LocaleController.formatString(R.string.TelegramRObservedAt,
-+                                    LocaleController.formatDateTime(observed, true));
-+                        }
-+                    }
-                 }
-                 newSubtitle = newStatus;
-             } else {
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
-index e6478ee8208325f13aa329a295074f1a1801bf28..91fb8a9d1b2387e509efb30f957159eb30d8df83 100644
+index e6478ee8208325f13aa329a295074f1a1801bf28..d54384857a0fddbcf092139a4097803fc161b788 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
 @@ -126,6 +126,7 @@ import org.telegram.messenger.NotificationCenter;
@@ -1394,7 +1658,19 @@ index e6478ee8208325f13aa329a295074f1a1801bf28..91fb8a9d1b2387e509efb30f957159eb
          if (dialogStoriesCell != null) {
              dialogStoriesCell.onResume();
          }
-@@ -13433,6 +13455,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
+@@ -12427,7 +12449,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
+         }
+         boolean onlySelfStories = !isArchive() && getStoriesController().hasOnlySelfStories();
+         boolean newVisibility;
+-        if (communityId != 0) {
++        if (!isArchive() && TelegramRSettings.option(currentAccount, TelegramRSettings.HIDE_STORIES)) {
++            onlySelfStories = false;
++            newVisibility = false;
++        } else if (communityId != 0) {
+             newVisibility = false;
+         } else if (isArchive()) {
+             newVisibility = !getStoriesController().getHiddenList().isEmpty();
+@@ -13433,6 +13458,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
              });
          }
  
@@ -1716,10 +1992,34 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
                  cancelRequestingPasskey.run();
                  cancelRequestingPasskey = null;
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
-index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..f0841b1f9ac0dc3138e6906a48045e904543d49a 100644
+index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..5d64e29fe1e7f86adcf6cb79f5be891ce0e673d0 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
-@@ -14824,7 +14824,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
+@@ -164,6 +164,7 @@ import org.telegram.messenger.NotificationsController;
+ import org.telegram.messenger.R;
+ import org.telegram.messenger.SendMessagesHelper;
+ import org.telegram.messenger.SharedConfig;
++import org.telegram.messenger.TelegramRSettings;
+ import org.telegram.messenger.SvgHelper;
+ import org.telegram.messenger.UserConfig;
+ import org.telegram.messenger.UserObject;
+@@ -11742,6 +11743,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
+                 isOnline[0] = false;
+                 newString2 = LocaleController.formatUserStatus(currentAccount, user, isOnline, shortStatus ? new boolean[1] : null);
+                 hiddenStatusButton = user != null && !isOnline[0] && !getUserConfig().isPremium() && user.status != null && (user.status instanceof TLRPC.TL_userStatusRecently || user.status instanceof TLRPC.TL_userStatusLastMonth || user.status instanceof TLRPC.TL_userStatusLastWeek) && user.status.by_me;
++                if (!isOnline[0] && user.status != null && user.status.expires <= 0
++                        && TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED)) {
++                    final int observed = getMessagesController().getTelegramRObservedActivity(user.id);
++                    if (observed > 0) {
++                        newString2 = LocaleController.formatString(R.string.TelegramRObservedAt,
++                                LocaleController.formatDateTime(observed, true));
++                        hiddenStatusButton = false;
++                    }
++                }
+                 if (onlineTextView != null && !mediaHeaderVisible) {
+                     int key = isOnline[0] && peerColor == null ? Theme.key_profile_status : Theme.key_actionBarDefaultSubtitle;
+                     onlineTextView.setTag(key);
+@@ -14824,7 +14834,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                      new SearchResult(321, getString(R.string.BubbleRadius), "bubbleRadiusHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/appearance/message-corners"),
                      new SearchResult(322, getString(R.string.ChatList), "chatListHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))),
                      new SearchResult(323, getString(R.string.ChatListSwipeGesture), "swipeGestureHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))),
@@ -1729,10 +2029,10 @@ index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..f0841b1f9ac0dc3138e6906a48045e90
                      new SearchResult(327, getString(R.string.RaiseToListen), "raiseToListenRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/data/raise-to-listen"),
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96514af30d
+index 0000000000000000000000000000000000000000..ca4b5ee82801783747c96ed6367c6800653b5af5
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,143 @@
 +/*
 + * TelegramR modifications to Telegram for Android.
 + * Licensed under GNU GPL v. 2 or later. See LICENSE.
@@ -1762,6 +2062,9 @@ index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96
 +    private static final int DELAY = 6;
 +    private static final int OBSERVED = 7;
 +    private static final int THEMES = 9;
++    private static final int HIDE_STORIES = 10;
++    private static final int HISTORY = 11;
++    private static final int CLEAR_HISTORY = 12;
 +
 +    TelegramRSettingsActivity(int account) {
 +        currentAccount = account;
@@ -1813,7 +2116,13 @@ index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96
 +        items.add(UItem.asCheck(SILENT_SEND, getString(R.string.TelegramRSilentSend))
 +                .setChecked(TelegramRSettings.isSilentSendEnabled(currentAccount)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRSilentSendDescription)));
++        items.add(UItem.asCheck(HISTORY, getString(R.string.TelegramRHistory))
++                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)));
++        items.add(UItem.asShadow(getString(R.string.TelegramRHistoryDescription)));
++        items.add(UItem.asButton(CLEAR_HISTORY, getString(R.string.TelegramRClearHistory)));
 +        items.add(UItem.asHeader(getString(R.string.TelegramRAppearance)));
++        items.add(UItem.asCheck(HIDE_STORIES, getString(R.string.TelegramRHideStories))
++                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HIDE_STORIES)));
 +        items.add(UItem.asButton(THEMES, getString(R.string.TelegramRThemes)));
 +    }
 +
@@ -1825,9 +2134,24 @@ index 0000000000000000000000000000000000000000..09b1b6e8c5143c9762a91f50479b0f96
 +
 +    @Override
 +    protected void onClick(UItem item, View view, int position, float x, float y) {
-+        if (item.id == THEMES) {
++        if (item.id == CLEAR_HISTORY) {
++            final long owner = getUserConfig().getClientUserId();
++            showDialog(new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity(), getResourceProvider())
++                    .setTitle(getString(R.string.TelegramRClearHistory))
++                    .setMessage(getString(R.string.TelegramRClearHistoryConfirm))
++                    .setNegativeButton(getString(R.string.Cancel), null)
++                    .setPositiveButton(getString(R.string.Delete), (dialog, which) ->
++                            getMessagesStorage().getStorageQueue().postRunnable(() ->
++                                    org.telegram.messenger.TelegramRHistory.clear(owner)))
++                    .create());
++            return;
++        } else if (item.id == THEMES) {
 +            presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
 +            return;
++        } else if (item.id == HISTORY) {
++            TelegramRSettings.toggleOption(currentAccount, TelegramRSettings.HISTORY);
++        } else if (item.id == HIDE_STORIES) {
++            TelegramRSettings.toggleOption(currentAccount, TelegramRSettings.HIDE_STORIES);
 +        } else if (item.id == DELAY || item.id == OBSERVED) {
 +            TelegramRSettings.toggleOption(currentAccount, item.id == DELAY ? TelegramRSettings.DELAY : TelegramRSettings.OBSERVED);
 +        } else if (item.id == SILENT_SEND) {
@@ -7185,10 +7509,10 @@ index 0000000000000000000000000000000000000000..b1ca092e560dae1d552e600f3dc801a7
 +</vector>
 diff --git a/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..31e74b59e9dd36cf7d656fb47f099c9089da4261
+index 0000000000000000000000000000000000000000..b87e3a6444827a6250728390d77dfd39dad7e4da
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,58 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRGhostActive">Режим невидимки включён</string>
@@ -7237,13 +7561,22 @@ index 0000000000000000000000000000000000000000..31e74b59e9dd36cf7d656fb47f099c90
 +    <string name="TelegramRCodeTimeout">Telegram не ответил на запрос кода. Проверьте подключение и повторите попытку.</string>
 +    <string name="TelegramRLoginOffline">Подключитесь к интернету, чтобы запросить код входа в Telegram.</string>
 +    <string name="TelegramRReadAll">Прочитать всё</string>
++    <string name="TelegramRHideStories">Скрыть истории над списком чатов</string>
++    <string name="TelegramRHistory">История сообщений</string>
++    <string name="TelegramRHistoryDescription">Хранит полученный текст до правок и удаления на этом устройстве до 30 дней. Поиск доступен в меню чата.</string>
++    <string name="TelegramRDeleted">Удалено</string>
++    <string name="TelegramRPreviousEdit">Предыдущая версия</string>
++    <string name="TelegramRHistoryEmpty">Сохранённый текст не найден</string>
++    <string name="TelegramRHistoryError">Не удалось прочитать архив</string>
++    <string name="TelegramRClearHistory">Очистить историю сообщений</string>
++    <string name="TelegramRClearHistoryConfirm">Удалить архив текстов этого аккаунта с устройства?</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..47812ae451cac46f6846fc7465659e2e052d83a1
+index 0000000000000000000000000000000000000000..7cb580b31fdf88a173be457fd2166b79ca93a100
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,58 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Вигляд чатів</string>
@@ -7292,13 +7625,22 @@ index 0000000000000000000000000000000000000000..47812ae451cac46f6846fc7465659e2e
 +    <string name="TelegramRSizeSmallest">Найменший</string>
 +    <string name="TelegramRSizeLargest">Найбільший</string>
 +    <string name="TelegramRReadAll">Прочитати все</string>
++    <string name="TelegramRHideStories">Приховати історії над списком чатів</string>
++    <string name="TelegramRHistory">Історія повідомлень</string>
++    <string name="TelegramRHistoryDescription">Зберігає отриманий текст до змін і видалення на цьому пристрої до 30 днів. Пошук доступний у меню чату.</string>
++    <string name="TelegramRDeleted">Видалено</string>
++    <string name="TelegramRPreviousEdit">Попередня редакція</string>
++    <string name="TelegramRHistoryEmpty">Збереженого тексту не знайдено</string>
++    <string name="TelegramRHistoryError">Не вдалося прочитати архів</string>
++    <string name="TelegramRClearHistory">Очистити історію повідомлень</string>
++    <string name="TelegramRClearHistoryConfirm">Видалити архів текстів цього акаунта з пристрою?</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values/strings_telegramr.xml b/TMessagesProj/src/main/res/values/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..4c2d92be0b7142bc824256515c59a0925c1a1ba6
+index 0000000000000000000000000000000000000000..38483d39d9ed6086a9050e286d313bebdf5ad731
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values/strings_telegramr.xml
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,58 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Chat layout</string>
@@ -7347,6 +7689,15 @@ index 0000000000000000000000000000000000000000..4c2d92be0b7142bc824256515c59a092
 +    <string name="TelegramRSizeSmallest">Smallest</string>
 +    <string name="TelegramRSizeLargest">Largest</string>
 +    <string name="TelegramRReadAll">Read all</string>
++    <string name="TelegramRHideStories">Hide stories above the chat list</string>
++    <string name="TelegramRHistory">Message history</string>
++    <string name="TelegramRHistoryDescription">Saves received text before edits and deletions on this device for up to 30 days. Open a chat menu to search it.</string>
++    <string name="TelegramRDeleted">Deleted</string>
++    <string name="TelegramRPreviousEdit">Previous version</string>
++    <string name="TelegramRHistoryEmpty">No matching saved text</string>
++    <string name="TelegramRHistoryError">Could not read the archive</string>
++    <string name="TelegramRClearHistory">Clear message history</string>
++    <string name="TelegramRClearHistoryConfirm">Delete the archived text for this account from this device?</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/xml/auth.xml b/TMessagesProj/src/main/res/xml/auth.xml
 index 4dc99f271100616399c0aa57620fd49b3c29a73a..5529762e4b81643e7ec789209288b1af395f334e 100644
@@ -7416,7 +7767,7 @@ index 9e9962e687bca63813de2a8d320bc5d607f452fb..60fe393d1789244ae9c6c65b3f92dbc4
 \ No newline at end of file
 diff --git a/TMessagesProj_App/google-services.json b/TMessagesProj_App/google-services.json
 deleted file mode 100644
-index 640e841b2d2e2a72fe79193ea0130161fb291b2a..0000000000000000000000000000000000000000
+index 03ecced28f2a532610aaaedecaeef493603e658c..0000000000000000000000000000000000000000
 --- a/TMessagesProj_App/google-services.json
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -7521,7 +7872,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 \ No newline at end of file
 diff --git a/TMessagesProj_AppHockeyApp/google-services.json b/TMessagesProj_AppHockeyApp/google-services.json
 deleted file mode 100644
-index 640e841b2d2e2a72fe79193ea0130161fb291b2a..0000000000000000000000000000000000000000
+index 03ecced28f2a532610aaaedecaeef493603e658c..0000000000000000000000000000000000000000
 --- a/TMessagesProj_AppHockeyApp/google-services.json
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -7626,7 +7977,7 @@ index 640e841b2d2e2a72fe79193ea0130161fb291b2a..00000000000000000000000000000000
 \ No newline at end of file
 diff --git a/TMessagesProj_AppHuawei/google-services.json b/TMessagesProj_AppHuawei/google-services.json
 deleted file mode 100644
-index 640e841b2d2e2a72fe79193ea0130161fb291b2a..0000000000000000000000000000000000000000
+index 03ecced28f2a532610aaaedecaeef493603e658c..0000000000000000000000000000000000000000
 --- a/TMessagesProj_AppHuawei/google-services.json
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -7837,7 +8188,7 @@ index 1551269247fdf30a91b3a5fd7f16c77813a455b1..d125fff97bcc365dfbec3f207ee2ca06
 +}
 diff --git a/TMessagesProj_AppStandalone/google-services.json b/TMessagesProj_AppStandalone/google-services.json
 deleted file mode 100644
-index 640e841b2d2e2a72fe79193ea0130161fb291b2a..0000000000000000000000000000000000000000
+index 03ecced28f2a532610aaaedecaeef493603e658c..0000000000000000000000000000000000000000
 --- a/TMessagesProj_AppStandalone/google-services.json
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -7981,7 +8332,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ac0b2f06993add6bc496f4f1be84469fc339cf22 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ed35b27bbec5b77eeab4bda2e90cf178a2e9c12d 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -7991,8 +8342,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..ac0b2f06993add6bc496f4f1be84469f
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7309
-+APP_VERSION_NAME=13.2.2-telegramr.7
++APP_VERSION_CODE=7310
++APP_VERSION_NAME=13.2.2-telegramr.8
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android

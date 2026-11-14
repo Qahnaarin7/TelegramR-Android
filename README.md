@@ -6,7 +6,7 @@
 - «Додатково» містить «Невидимку», тихе надсилання, відкладення звичайного тексту на 12 секунд і показ поміченої активності.
 - У списку чатів можна налаштувати розмір шрифту й аватарів, а в меню відкритого чату є дія «Прочитати все».
 
-[Що змінилося у версії 13.2.2-telegramr.7](CHANGELOG.md) · [Як зібрати](BUILD.md) · [Releases](https://github.com/Qahnaarin7/TelegramR-Android/releases)
+[Що змінилося у версії 13.2.2-telegramr.8](CHANGELOG.md) · [Як зібрати](BUILD.md) · [Releases](https://github.com/Qahnaarin7/TelegramR-Android/releases)
 
 ## Вихідний код
 
