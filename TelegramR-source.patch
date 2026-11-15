@@ -1319,8 +1319,66 @@ index 698bf4d5d0417222b2579219eb725a36d732e016..b183f29fc350fa3b88c37848c352d098
          if (LocaleController.isRTL) {
              tagsRight = getMeasuredWidth() - dp(messagePaddingStart);
              tagsLeft = dp(64);
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Cells/TextCheckCell.java b/TMessagesProj/src/main/java/org/telegram/ui/Cells/TextCheckCell.java
+index 6d5d8e5d1f2e146d34af7bb709498635c6f37c31..6b324869724d661d1ac33fb8720fd6c2ee199c87 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/Cells/TextCheckCell.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/Cells/TextCheckCell.java
+@@ -54,6 +54,7 @@ public class TextCheckCell extends FrameLayout {
+     private Switch checkBox;
+     private boolean needDivider;
+     private boolean isMultiline;
++    private boolean wrapTitle;
+     private int height = 50;
+     private int animatedColorBackground;
+     private float animationProgress;
+@@ -147,7 +148,14 @@ public class TextCheckCell extends FrameLayout {
+ 
+     @Override
+     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+-        if (isMultiline) {
++        if (wrapTitle) {
++            final int widthSpec = MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY);
++            super.onMeasure(widthSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
++            final int minHeight = AndroidUtilities.dp(height) + (needDivider ? 1 : 0);
++            if (getMeasuredHeight() < minHeight) {
++                super.onMeasure(widthSpec, MeasureSpec.makeMeasureSpec(minHeight, MeasureSpec.EXACTLY));
++            }
++        } else if (isMultiline) {
+             super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+         } else {
+             super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(valueTextView.getVisibility() == VISIBLE ? 64 : height) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
+@@ -166,6 +174,16 @@ public class TextCheckCell extends FrameLayout {
+     }
+ 
+     public void setTextAndCheck(CharSequence text, boolean checked, boolean divider) {
++        setTextAndCheck(text, checked, divider, false);
++    }
++
++    public void setTextAndCheck(CharSequence text, boolean checked, boolean divider, boolean wrapTitle) {
++        if (this.wrapTitle != wrapTitle) {
++            textView.setSingleLine(!wrapTitle);
++            textView.setMaxLines(wrapTitle ? Integer.MAX_VALUE : 1);
++            textView.setEllipsize(wrapTitle ? null : TextUtils.TruncateAt.END);
++        }
++        this.wrapTitle = wrapTitle;
+         AvatarSpan.checkSpansParent(text, this);
+         textView.setText(text);
+         isMultiline = false;
+@@ -174,8 +192,10 @@ public class TextCheckCell extends FrameLayout {
+         needDivider = divider;
+         valueTextView.setVisibility(GONE);
+         LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
+-        layoutParams.height = LayoutParams.MATCH_PARENT;
+-        layoutParams.topMargin = 0;
++        layoutParams.height = wrapTitle ? LayoutParams.WRAP_CONTENT : LayoutParams.MATCH_PARENT;
++        layoutParams.gravity = (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT)
++                | (wrapTitle ? Gravity.CENTER_VERTICAL : Gravity.TOP);
++        layoutParams.topMargin = layoutParams.bottomMargin = wrapTitle ? AndroidUtilities.dp(10) : 0;
+         textView.setLayoutParams(layoutParams);
+         setWillNotDraw(!divider);
+     }
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
-index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec294031bbe6d9 100644
+index a54b1341e95280ef1e5b1f381833a639700d0f00..765dd1083cd00e8de5e70bcdee3010e9d08a5bae 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChatActivity.java
 @@ -192,6 +192,7 @@ import org.telegram.messenger.SharedConfig;
@@ -1438,7 +1496,22 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          if (BuildConfig.DEBUG_PRIVATE_VERSION && headerItem != null) {
              headerItem.lazilyAddSubItem(888, R.drawable.menu_download_round, "Dump Canvas");
          }
-@@ -6818,6 +6877,8 @@ public class ChatActivity extends BaseFragment implements
+@@ -4609,6 +4668,14 @@ public class ChatActivity extends BaseFragment implements
+         }
+ 
+         chatListView = new ChatListRecyclerView(context, themeDelegate) {
++            @Override
++            public boolean dispatchTouchEvent(MotionEvent event) {
++                if (historyDecoration != null && historyDecoration.handleTouch(event)) {
++                    return true;
++                }
++                return super.dispatchTouchEvent(event);
++            }
++
+             private int lastWidth;
+ 
+             private final ArrayList<ChatMessageCell> drawTimeAfter = new ArrayList<>();
+@@ -6818,6 +6885,8 @@ public class ChatActivity extends BaseFragment implements
                  }
              }
          });
@@ -1447,7 +1520,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          chatListView.setOnItemLongClickListener(onItemLongClickListener);
          chatListView.setOnItemClickListener(onItemClickListener);
          chatListView.setOnScrollListener(new RecyclerView.OnScrollListener() {
-@@ -8416,7 +8477,15 @@ public class ChatActivity extends BaseFragment implements
+@@ -8416,7 +8485,15 @@ public class ChatActivity extends BaseFragment implements
              @Override
              public void setVisibility(int visibility) {
                  super.setVisibility(visibility);
@@ -1464,7 +1537,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              }
          };
          bottomChannelButtonsLayout.setVisibility(View.INVISIBLE);
-@@ -17230,7 +17299,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -17230,7 +17307,9 @@ public class ChatActivity extends BaseFragment implements
          }
          updateFloatingTopicView();
          invalidateChatListViewTopPadding();
@@ -1475,7 +1548,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              int scheduledRead = 0;
              if ((maxPositiveUnreadId != Integer.MIN_VALUE || maxNegativeUnreadId != Integer.MAX_VALUE)) {
                  int counterDecrement = 0;
-@@ -19655,6 +19726,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -19655,6 +19734,9 @@ public class ChatActivity extends BaseFragment implements
      }
  
      private void checkActionBarMenu(boolean animated) {
@@ -1485,7 +1558,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          if (currentEncryptedChat != null && !(currentEncryptedChat instanceof TLRPC.TL_encryptedChat) ||
                  currentChat != null && (chatMode != 0 || threadMessageId != 0 || chatInfo == null || chatInfo.ttl_period == 0) ||
                  currentUser != null && (UserObject.isDeleted(currentUser) || currentEncryptedChat == null && (userInfo == null || userInfo.ttl_period == 0))) {
-@@ -21326,6 +21400,10 @@ public class ChatActivity extends BaseFragment implements
+@@ -21326,6 +21408,10 @@ public class ChatActivity extends BaseFragment implements
  
      @Override
      public void didReceivedNotification(int id, int account, final Object... args) {
@@ -1496,7 +1569,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          if (id == NotificationCenter.messagesDidLoad) {
              didReceivedNotification_messagesDidLoad(id, account, args);
          } else {
-@@ -21336,6 +21414,11 @@ public class ChatActivity extends BaseFragment implements
+@@ -21336,6 +21422,11 @@ public class ChatActivity extends BaseFragment implements
              didReceivedNotification6(id, account, args);
              didReceivedNotification7(id, account, args);
          }
@@ -1508,7 +1581,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
      }
  
      private void didReceivedNotification_messagesDidLoad(int id, int account, final Object... args) {
-@@ -21453,7 +21536,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -21453,7 +21544,9 @@ public class ChatActivity extends BaseFragment implements
  
              resumeDelayedFragmentAnimation();
              MessageObject messageObject = messArr.get(0);
@@ -1519,7 +1592,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              AndroidUtilities.cancelRunOnUIThread(fragmentTransitionRunnable);
              fragmentTransitionRunnable.run();
              return;
-@@ -22825,6 +22910,21 @@ public class ChatActivity extends BaseFragment implements
+@@ -22825,6 +22918,21 @@ public class ChatActivity extends BaseFragment implements
                      invalidatePaidMessagesPriceOnIncoming(arr);
                  }
                  processNewMessages(arr);
@@ -1541,7 +1614,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              } else if (ChatObject.isChannel(currentChat) && !currentChat.megagroup && chatInfo != null && did == -chatInfo.linked_chat_id) {
                  for (int a = 0, N = arr.size(); a < N; a++) {
                      MessageObject messageObject = arr.get(a);
-@@ -23188,6 +23288,13 @@ public class ChatActivity extends BaseFragment implements
+@@ -23188,6 +23296,13 @@ public class ChatActivity extends BaseFragment implements
              }
              Integer msgId = (Integer) args[0];
              MessageObject obj = messagesDict[0].get(msgId);
@@ -1555,7 +1628,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              if (isThreadChat() && pendingSendMessagesDict.size() > 0) {
                  MessageObject object = pendingSendMessagesDict.get(msgId);
                  if (object != null) {
-@@ -28926,6 +29033,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -28926,6 +29041,7 @@ public class ChatActivity extends BaseFragment implements
          bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIFT, showGiftButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
          bottomChannelButtonsLayout.showButton(ChatActivityChannelButtonsLayout.BUTTON_GIGA_GROUP_INFO, showGigaGroupButton && bottomChannelButtonsLayout.getVisibility() == View.VISIBLE, animated);
  
@@ -1563,7 +1636,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          checkRaiseSensors();
      }
  
-@@ -30659,6 +30767,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -30659,6 +30775,7 @@ public class ChatActivity extends BaseFragment implements
      @Override
      public void onResume() {
          super.onResume();
@@ -1571,7 +1644,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          checkShowBlur(false);
          activityResumeTime = System.currentTimeMillis();
          if (openImport && getSendMessagesHelper().getImportingHistory(dialog_id) != null) {
-@@ -30872,9 +30981,36 @@ public class ChatActivity extends BaseFragment implements
+@@ -30872,9 +30989,36 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -1608,7 +1681,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          scrolling = false;
          if (scrimPopupWindow != null) {
              scrimPopupWindow.setPauseNotifications(false);
-@@ -34293,6 +34429,10 @@ public class ChatActivity extends BaseFragment implements
+@@ -34293,6 +34437,10 @@ public class ChatActivity extends BaseFragment implements
          }
          boolean preserveDim = false;
          switch (option) {
@@ -1619,7 +1692,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
              case OPTION_RETRY: {
                  final MessageObject object = selectedObject;
                  final MessageObject.GroupedMessages group = selectedObjectGroup;
-@@ -38077,6 +38217,7 @@ public class ChatActivity extends BaseFragment implements
+@@ -38077,6 +38225,7 @@ public class ChatActivity extends BaseFragment implements
                  view = new ChatMessageCell(mContext, currentAccount, true, sharedResources, themeDelegate);
                  ChatMessageCell chatMessageCell = (ChatMessageCell) view;
                  chatMessageCell.setResourcesProvider(themeDelegate);
@@ -1627,7 +1700,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
                  chatMessageCell.shouldCheckVisibleOnScreen = false;
                  chatMessageCell.setDelegate(getChatMessageCellDelegate());
                  chatMessageCell.draftAnimationsPool = botDraftAnimationsPool;
-@@ -47104,6 +47245,14 @@ public class ChatActivity extends BaseFragment implements
+@@ -47104,6 +47253,14 @@ public class ChatActivity extends BaseFragment implements
              icons.add(sendMoneyIndex, R.drawable.ic_gram);
          }
  
@@ -1642,7 +1715,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          if (showWelcomeMessageRevertOption(primaryMessage)) {
              items.add(getString(R.string.WelcomeMessageRevert));
              options.add(OPTION_WELCOME_REVERT);
-@@ -47111,6 +47260,242 @@ public class ChatActivity extends BaseFragment implements
+@@ -47111,6 +47268,242 @@ public class ChatActivity extends BaseFragment implements
          }
      }
  
@@ -1885,7 +1958,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
      private boolean showWelcomeMessageRevertOption(MessageObject messageObject) {
          return chatMode == MODE_DEFAULT && messageObject != null && messageObject.isWelcomeAnchored();
      }
-@@ -47176,6 +47561,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -47176,6 +47569,9 @@ public class ChatActivity extends BaseFragment implements
              pollAddVisibility = animatorPollAddAnswerVisibility.getFloatValue();
          }
  
@@ -1895,7 +1968,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
          if (!isInsideContainer && !isInPreviewMode()) {
              return lerp(Math.max(lerp(defaultIslandHeight, enterViewIslandHeight, enterViewFactor) * visibility, dp(44)), -dp(7), pollAddVisibility);
          } else {
-@@ -47455,8 +47843,9 @@ public class ChatActivity extends BaseFragment implements
+@@ -47455,8 +47851,9 @@ public class ChatActivity extends BaseFragment implements
  
      private void checkBottomViewVisibility(View view, int containerId, boolean allowVisibilityChange) {
          if (view != null) {
@@ -1907,7 +1980,7 @@ index a54b1341e95280ef1e5b1f381833a639700d0f00..9a063a95ea4216ceed55b690f9ec2940
                  * (1f - animatorPollAddAnswerVisibility.getFloatValue());
  
              view.setAlpha(alpha);
-@@ -47497,8 +47886,11 @@ public class ChatActivity extends BaseFragment implements
+@@ -47497,8 +47894,11 @@ public class ChatActivity extends BaseFragment implements
              bottomOverlay.setTranslationY(dp(54) * hideFactor);
          }
          if (chatInputViewsContainer != null) {
@@ -2106,6 +2179,51 @@ index 266e5709fb3bc95fc81cd535a9433734c2a04a87..775d3a238ff6ed1f5b9ac47c22ce18c4
                      }
                  } else {
                      messageTransitionIsRunning = false;
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Components/UItem.java b/TMessagesProj/src/main/java/org/telegram/ui/Components/UItem.java
+index 5bea1ba0b45a7fcd509ca9f8bc328552b22efde9..5b088541750a721aeb73e7bd5fafcb397da5e980 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/Components/UItem.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/Components/UItem.java
+@@ -37,6 +37,7 @@ public class UItem extends AdapterWithDiffUtils.Item {
+     public boolean reordering;
+     public int pad;
+     public boolean hideDivider;
++    public boolean wrapCheckTitle;
+     public int iconResId;
+     public Drawable drawable;
+     public CharSequence text, subtext, textValue;
+@@ -317,6 +318,11 @@ public class UItem extends AdapterWithDiffUtils.Item {
+         return i;
+     }
+ 
++    public UItem wrapCheckTitle() {
++        wrapCheckTitle = true;
++        return this;
++    }
++
+     public static UItem asRadio(int id, CharSequence text) {
+         UItem i = new UItem(UniversalAdapter.VIEW_TYPE_RADIO, false);
+         i.id = id;
+@@ -808,6 +814,7 @@ public class UItem extends AdapterWithDiffUtils.Item {
+             longValue == item.longValue &&
+             drawable == item.drawable &&
+             Objects.equals(object, item.object) &&
++            wrapCheckTitle == item.wrapCheckTitle &&
+             Objects.equals(object2, item.object2)
+         );
+     }
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Components/UniversalAdapter.java b/TMessagesProj/src/main/java/org/telegram/ui/Components/UniversalAdapter.java
+index 229d06fe8f10b4750a8c3a7e81f28a97326b868f..4a492bda2c7aed6e3e6707c6e40156ca5b9b00fe 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/Components/UniversalAdapter.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/Components/UniversalAdapter.java
+@@ -728,7 +728,7 @@ public class UniversalAdapter extends AdapterWithDiffUtils {
+                     checkCell.setChecked(item.checked);
+                 }
+                 checkCell.setEnabled(item.enabled, null);
+-                checkCell.setTextAndCheck(item.text, item.checked, divider);
++                checkCell.setTextAndCheck(item.text, item.checked, divider, item.wrapCheckTitle);
+                 checkCell.itemId = item.id;
+                 if (viewType == VIEW_TYPE_CHECKRIPPLE) {
+                     ThemeBind.backgroundColor(holder.itemView, item.checked ? Theme.key_windowBackgroundChecked : Theme.key_windowBackgroundUnchecked);
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
 index e6478ee8208325f13aa329a295074f1a1801bf28..d54384857a0fddbcf092139a4097803fc161b788 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
@@ -2556,10 +2674,10 @@ index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..5d64e29fe1e7f86adcf6cb79f5be891c
                      new SearchResult(327, getString(R.string.RaiseToListen), "raiseToListenRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/data/raise-to-listen"),
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRHistoryDecoration.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRHistoryDecoration.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0a38057c67a249a3bcc868198f228857ccde32f3
+index 0000000000000000000000000000000000000000..63643bc8ec0ab8d6726d9996a4260d781e2ed792
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRHistoryDecoration.java
-@@ -0,0 +1,458 @@
+@@ -0,0 +1,465 @@
 +package org.telegram.ui;
 +
 +import static org.telegram.messenger.AndroidUtilities.dp;
@@ -2625,6 +2743,7 @@ index 0000000000000000000000000000000000000000..0a38057c67a249a3bcc868198f228857
 +    private final java.util.Map<JSONObject, String> names = new java.util.IdentityHashMap<>();
 +    private long dialogId;
 +    private Hit pressed;
++    private boolean handlingTouch;
 +    private float downX, downY;
 +
 +    private static final class Hit {
@@ -2660,46 +2779,52 @@ index 0000000000000000000000000000000000000000..0a38057c67a249a3bcc868198f228857
 +                clearAvatars();
 +            }
 +        });
-+        list.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-+            @Override
-+            public boolean onInterceptTouchEvent(RecyclerView recycler, MotionEvent event) {
-+                switch (event.getActionMasked()) {
-+                    case MotionEvent.ACTION_DOWN:
-+                        downX = event.getX();
-+                        downY = event.getY();
-+                        pressed = null;
-+                        for (Hit hit : hits) {
-+                            if (hit.bounds.contains(downX, downY)) {
-+                                pressed = hit;
-+                                break;
-+                            }
-+                        }
-+                        break;
-+                    case MotionEvent.ACTION_MOVE:
-+                        if (Math.abs(event.getX() - downX) > slop || Math.abs(event.getY() - downY) > slop) {
-+                            pressed = null;
-+                        }
-+                        break;
-+                    case MotionEvent.ACTION_CANCEL:
-+                        pressed = null;
-+                        break;
-+                    case MotionEvent.ACTION_UP:
-+                        Hit hit = pressed;
-+                        pressed = null;
-+                        if (hit != null && hit.bounds.contains(event.getX(), event.getY())) {
-+                            if (hit.media != null) {
-+                                openMedia.accept(hit.media);
-+                            } else {
-+                                expanded.put(hit.editId, !expanded.get(hit.editId));
-+                                refresh(recycler);
-+                            }
-+                            return true;
-+                        }
-+                        break;
++    }
++
++    // Own the gesture from DOWN so Telegram's message tap and long-press handlers
++    // cannot select the message under the archive controls.
++    boolean handleTouch(MotionEvent event) {
++        final int action = event.getActionMasked();
++        if (action == MotionEvent.ACTION_DOWN) {
++            downX = event.getX();
++            downY = event.getY();
++            pressed = findHit(downX, downY);
++            handlingTouch = pressed != null;
++            return handlingTouch;
++        }
++        if (!handlingTouch) {
++            return false;
++        }
++        if (action == MotionEvent.ACTION_MOVE && (Math.abs(event.getX() - downX) > slop
++                || Math.abs(event.getY() - downY) > slop) || action == MotionEvent.ACTION_POINTER_DOWN) {
++            pressed = null;
++        } else if (action == MotionEvent.ACTION_UP) {
++            Hit target = pressed;
++            Hit current = findHit(event.getX(), event.getY());
++            pressed = null;
++            handlingTouch = false;
++            if (target != null && current != null && target.editId == current.editId && target.media == current.media) {
++                if (target.media != null) {
++                    openMedia.accept(target.media);
++                } else {
++                    expanded.put(target.editId, !expanded.get(target.editId));
++                    refresh(list);
 +                }
-+                return false;
 +            }
-+        });
++        } else if (action == MotionEvent.ACTION_CANCEL) {
++            pressed = null;
++            handlingTouch = false;
++        }
++        return true;
++    }
++
++    private Hit findHit(float x, float y) {
++        for (Hit hit : hits) {
++            if (hit.bounds.contains(x, y)) {
++                return hit;
++            }
++        }
++        return null;
 +    }
 +
 +    void bind(List<JSONObject> records, List<MessageObject> messages, long dialog, long thread, boolean newestLoaded, boolean oldestLoaded) {
@@ -2952,7 +3077,7 @@ index 0000000000000000000000000000000000000000..0a38057c67a249a3bcc868198f228857
 +        float x = left + dp(17);
 +        int bottom = (int) y + deletedHeight(record, maxWidth) - dp(3);
 +        deletedBubble.setBounds((int) left, (int) y, (int) x + textWidth + dp(10), bottom);
-+        deletedBubble.setAlpha(170);
++        deletedBubble.setAlpha(183);
 +        deletedBubble.draw(canvas);
 +        if (withAvatar && sender != 0) {
 +            drawAvatar(canvas, sender, name, bottom - dp(40));
@@ -3020,7 +3145,7 @@ index 0000000000000000000000000000000000000000..0a38057c67a249a3bcc868198f228857
 +}
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b438c868f91564c7f6110008a19bc18a2172cc72
+index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6caa9281750
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 @@ -0,0 +1,149 @@
@@ -3097,31 +3222,31 @@ index 0000000000000000000000000000000000000000..b438c868f91564c7f6110008a19bc18a
 +        addPrivacy(items, HIDE_ONLINE, R.string.TelegramRHideOnline, R.string.TelegramRHideOnlineDescription, TelegramRSettings.Privacy.ONLINE);
 +        addPrivacy(items, HIDE_READ, R.string.TelegramRHideRead, R.string.TelegramRHideReadDescription, TelegramRSettings.Privacy.READ);
 +        addPrivacy(items, HIDE_TYPING, R.string.TelegramRHideTyping, R.string.TelegramRHideTypingDescription, TelegramRSettings.Privacy.TYPING);
-+        items.add(UItem.asCheck(OBSERVED, getString(R.string.TelegramRObserved))
++        items.add(UItem.asCheck(OBSERVED, getString(R.string.TelegramRObserved)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRObservedDescription)));
 +        items.add(UItem.asHeader(getString(R.string.TelegramRSending)));
-+        items.add(UItem.asCheck(DELAY, getString(R.string.TelegramRDelay))
++        items.add(UItem.asCheck(DELAY, getString(R.string.TelegramRDelay)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.DELAY)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRDelayDescription)));
-+        items.add(UItem.asCheck(READ_AFTER_SEND, getString(R.string.TelegramRReadAfterSend))
++        items.add(UItem.asCheck(READ_AFTER_SEND, getString(R.string.TelegramRReadAfterSend)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.READ_AFTER_SEND)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRReadAfterSendDescription)));
-+        items.add(UItem.asCheck(SILENT_SEND, getString(R.string.TelegramRSilentSend))
++        items.add(UItem.asCheck(SILENT_SEND, getString(R.string.TelegramRSilentSend)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.isSilentSendEnabled(currentAccount)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRSilentSendDescription)));
-+        items.add(UItem.asCheck(HISTORY, getString(R.string.TelegramRHistory))
++        items.add(UItem.asCheck(HISTORY, getString(R.string.TelegramRHistory)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HISTORY)));
 +        items.add(UItem.asShadow(getString(R.string.TelegramRHistoryDescription)));
 +        items.add(UItem.asButton(CLEAR_HISTORY, getString(R.string.TelegramRClearHistory)));
 +        items.add(UItem.asHeader(getString(R.string.TelegramRAppearance)));
-+        items.add(UItem.asCheck(HIDE_STORIES, getString(R.string.TelegramRHideStories))
++        items.add(UItem.asCheck(HIDE_STORIES, getString(R.string.TelegramRHideStories)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HIDE_STORIES)));
 +    }
 +
 +    private void addPrivacy(ArrayList<UItem> items, int id, int label, int description,
 +                            TelegramRSettings.Privacy privacy) {
-+        items.add(UItem.asCheck(id, getString(label)).setChecked(TelegramRSettings.getPrivacy(currentAccount, privacy)));
++        items.add(UItem.asCheck(id, getString(label)).wrapCheckTitle().setChecked(TelegramRSettings.getPrivacy(currentAccount, privacy)));
 +        items.add(UItem.asShadow(getString(description)));
 +    }
 +
@@ -9344,7 +9469,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..5502ff9596965b0aaa3eeb3748ad86e0754f6855 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..604ee041548d22708fac3fea18d327193562396f 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -9354,8 +9479,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..5502ff9596965b0aaa3eeb3748ad86e0
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7313
-+APP_VERSION_NAME=13.2.2-telegramr.11
++APP_VERSION_CODE=7314
++APP_VERSION_NAME=13.2.2-telegramr.12
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android
