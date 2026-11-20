@@ -1,5 +1,7 @@
 # TelegramR Android
 
+**English.** TelegramR Android is an unofficial Telegram for Android client (package app.telegramr.android) that runs alongside the official app with its own login. It adds a phone-style single-pane mode that works well on dual-screen devices, an optional two-pane mode, ghost mode, silent and delayed sending, a Read all action, and chat list font and avatar size settings. The source is a cumulative patch on top of Telegram for Android 13.2.2 (DrKLO/Telegram).
+
 Неофіційний клієнт Telegram для Android з окремим пакетом `app.telegramr.android`. Може працювати поруч з офіційним клієнтом і має власний сеанс входу.
 
 - У режимі «Як на телефоні» список чатів і переписка відкриваються по черзі. На двоекранних пристроях активна панель розміщується в одній придатній області, якщо Android повідомляє про шарнір. У налаштуваннях є режим «Дві панелі».
