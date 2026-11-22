@@ -2372,6 +2372,36 @@ index 229d06fe8f10b4750a8c3a7e81f28a97326b868f..4a492bda2c7aed6e3e6707c6e40156ca
                  checkCell.itemId = item.id;
                  if (viewType == VIEW_TYPE_CHECKRIPPLE) {
                      ThemeBind.backgroundColor(holder.itemView, item.checked ? Theme.key_windowBackgroundChecked : Theme.key_windowBackgroundUnchecked);
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/Components/VideoPlayer.java b/TMessagesProj/src/main/java/org/telegram/ui/Components/VideoPlayer.java
+index 48f421fbced7f8b432f341637270ed3cf738b136..f6cc7472c4c0fde29318de05b8b67a8df99b6305 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/Components/VideoPlayer.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/Components/VideoPlayer.java
+@@ -458,19 +458,14 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
+         editor.apply();
+     }
+ 
+-    public static void saveLooping(boolean looping, MessageObject messageObject) {
+-        if (messageObject == null) return;
+-        final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("media_saved_pos", Activity.MODE_PRIVATE);
+-        final String key = messageObject.getDialogId() + "_" + messageObject.getId() + "loop";
+-        preferences.edit().putBoolean(key, looping).apply();
++    private static final String VIEWER_LOOPING_KEY = "telegramrVideoLoop";
++
++    public static void saveViewerLooping(boolean looping) {
++        MessagesController.getGlobalMainSettings().edit().putBoolean(VIEWER_LOOPING_KEY, looping).apply();
+     }
+ 
+-    public static Boolean getLooping(MessageObject messageObject) {
+-        if (messageObject == null) return null;
+-        final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("media_saved_pos", Activity.MODE_PRIVATE);
+-        final String key = messageObject.getDialogId() + "_" + messageObject.getId() + "loop";
+-        if (!preferences.contains(key)) return null;
+-        return preferences.getBoolean(key, false);
++    public static boolean getViewerLooping(boolean defaultValue) {
++        return MessagesController.getGlobalMainSettings().getBoolean(VIEWER_LOOPING_KEY, defaultValue);
+     }
+ 
+     public static final int QUALITY_AUTO = -1; // HLS
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
 index e6478ee8208325f13aa329a295074f1a1801bf28..d54384857a0fddbcf092139a4097803fc161b788 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
@@ -2812,6 +2842,78 @@ index f1aee7810a039f5883d139abeee5f23a8a3f4871..32aba295d8944a7e80edb6abd51fde0d
                      } else if (position == badgeNumberShowRow) {
                          checkCell.setTextAndCheck(getString("BadgeNumberShow", R.string.BadgeNumberShow), getNotificationsController().showBadgeNumber, true);
                      } else if (position == badgeNumberMutedRow) {
+diff --git a/TMessagesProj/src/main/java/org/telegram/ui/PhotoViewer.java b/TMessagesProj/src/main/java/org/telegram/ui/PhotoViewer.java
+index 1e4ad20ed17bee661e896b96476023dd8f020dc4..b43f0b030210066bfb3784999d059c96b3f876da 100644
+--- a/TMessagesProj/src/main/java/org/telegram/ui/PhotoViewer.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/PhotoViewer.java
+@@ -5745,13 +5745,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
+                     }, 32);
+                     updateCaptionTranslated();
+                 } else if (id == gallery_menu_loop) {
+-                    playerLooping = !playerLooping;
+-                    VideoPlayer.saveLooping(playerLooping, currentMessageObject);
+-                    if (videoPlayer != null) {
+-                        videoPlayer.setLooping(playerLooping);
+-                    }
+-                    loopItem.setEnabledByColor(playerLooping, 0xFFFFFFFF, 0xFF73B4EC);
+-                    loopItem.setSelectorColor(playerLooping ? 0x0F73B4EC : 0x0fffffff);
++                    boolean looping = !playerLooping;
++                    VideoPlayer.saveViewerLooping(looping);
++                    applyVideoLooping(looping);
+                 } else if (id == gallery_menu_report) {
+                     TLRPC.Photo photo = null;
+                     if (currentFileLocation != null && currentFileLocation.photo != null) {
+@@ -5819,7 +5815,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
+         videoQualityLayout = new LinearLayout(activityContext);
+         videoQualityLayout.setOrientation(LinearLayout.VERTICAL);
+         videoItem.getPopupLayout().addView(videoQualityLayout);
+-        loopItem = videoItem.addSubItem(gallery_menu_loop, R.drawable.menu_video_loop, LocaleController.getString(R.string.VideoPlayerLoop));
++        loopItem = videoItem.addSubItem(gallery_menu_loop, R.drawable.menu_video_loop,
++                LocaleController.getString(R.string.TelegramRVideoLoopOn));
+         loopItem.setSelectorColor(0x0fffffff);
+         castItemButton = new CastMediaRouteButton(activityContext) {
+             @Override
+@@ -10358,6 +10355,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
+         }
+     }
+ 
++    private void applyVideoLooping(boolean looping) {
++        playerLooping = looping;
++        videoPlayerControlFrameLayout.setSeekBarTransitionEnabled(looping);
++        if (videoPlayer != null) {
++            videoPlayer.setLooping(looping);
++        }
++        loopItem.setText(LocaleController.getString(looping
++                ? R.string.TelegramRVideoLoopOff : R.string.TelegramRVideoLoopOn));
++        loopItem.setEnabledByColor(looping, 0xFFFFFFFF, 0xFF73B4EC);
++        loopItem.setSelectorColor(looping ? 0x0F73B4EC : 0x0fffffff);
++    }
++
+     private void preparePlayer(ArrayList<VideoPlayer.Quality> videoUrises, Uri uri, boolean playWhenReady, boolean preview, boolean livePhoto) {
+         preparePlayer(videoUrises, uri, playWhenReady, preview, null, livePhoto, 0);
+     }
+@@ -10729,18 +10738,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
+             }
+         }
+ 
+-        Boolean savedLooping = VideoPlayer.getLooping(currentMessageObject);
+-        if (livePhoto) {
+-            playerLooping = false;
+-        } else if (savedLooping != null) {
+-            playerLooping = savedLooping;
+-        } else {
+-            playerLooping = (currentMessageObject != null && currentMessageObject.getDuration() <= 30) || (pageBlocksAdapter != null && pageBlocksAdapter.isHardwarePlayer(currentIndex));
+-        }
+-        videoPlayerControlFrameLayout.setSeekBarTransitionEnabled(playerLooping);
+-        videoPlayer.setLooping(playerLooping);
+-        loopItem.setEnabledByColor(playerLooping, 0xFFFFFFFF, 0xFF73B4EC);
+-        loopItem.setSelectorColor(playerLooping ? 0x0F73B4EC : 0x0fffffff);
++        boolean defaultLooping = (currentMessageObject != null && currentMessageObject.getDuration() <= 30)
++                || (pageBlocksAdapter != null && pageBlocksAdapter.isHardwarePlayer(currentIndex));
++        applyVideoLooping(!livePhoto && (preview ? defaultLooping : VideoPlayer.getViewerLooping(defaultLooping)));
+ 
+         if (currentMessageObject != null && currentMessageObject.forceSeekTo >= 0) {
+             seekToProgressPending = currentMessageObject.forceSeekTo;
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
 index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..2bd6fac9fd3aa2ad8c713b1c11b3c23aef08d750 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
@@ -8922,10 +9024,10 @@ index 0000000000000000000000000000000000000000..b1ca092e560dae1d552e600f3dc801a7
 +</vector>
 diff --git a/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..10b218890c3bfb20b0d1c4b9165d9aa7d3784ffc
+index 0000000000000000000000000000000000000000..f64af4283df04174a25defd6b938ac82366833b2
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,75 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRGhostActive">Режим невидимки включён</string>
@@ -8998,13 +9100,15 @@ index 0000000000000000000000000000000000000000..10b218890c3bfb20b0d1c4b9165d9aa7
 +    <string name="TelegramRNoPublishedReleases">Публичных релизов TelegramR пока нет.</string>
 +    <string name="TelegramRUpdateCheckFailed">Не удалось проверить обновления.</string>
 +    <string name="TelegramRUpdateAvailable">Доступна версия TelegramR %1$s. Нажмите, чтобы открыть релиз.</string>
++    <string name="TelegramRVideoLoopOn">Включить повтор видео</string>
++    <string name="TelegramRVideoLoopOff">Выключить повтор видео</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..3c60556fb4978d0f3a91ab6020e198c258f664f9
+index 0000000000000000000000000000000000000000..196e95b92afeb8cf97811dbabfe8bad8d857ce98
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,75 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Вигляд чатів</string>
@@ -9077,13 +9181,15 @@ index 0000000000000000000000000000000000000000..3c60556fb4978d0f3a91ab6020e198c2
 +    <string name="TelegramRNoPublishedReleases">Публічних релізів TelegramR ще немає.</string>
 +    <string name="TelegramRUpdateCheckFailed">Не вдалося перевірити оновлення.</string>
 +    <string name="TelegramRUpdateAvailable">Доступна версія TelegramR %1$s. Натисніть, щоб відкрити реліз.</string>
++    <string name="TelegramRVideoLoopOn">Увімкнути повтор відео</string>
++    <string name="TelegramRVideoLoopOff">Вимкнути повтор відео</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values/strings_telegramr.xml b/TMessagesProj/src/main/res/values/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..d9dfd0ab1a2a10f8dcff00a2498285393bc27834
+index 0000000000000000000000000000000000000000..1ca1ece494b8abe48d67b1b6408441ce52cab61d
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values/strings_telegramr.xml
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,75 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Chat layout</string>
@@ -9156,6 +9262,8 @@ index 0000000000000000000000000000000000000000..d9dfd0ab1a2a10f8dcff00a249828539
 +    <string name="TelegramRNoPublishedReleases">No public TelegramR releases yet.</string>
 +    <string name="TelegramRUpdateCheckFailed">Could not check for updates.</string>
 +    <string name="TelegramRUpdateAvailable">TelegramR %1$s is available. Tap to open the release.</string>
++    <string name="TelegramRVideoLoopOn">Enable video repeat</string>
++    <string name="TelegramRVideoLoopOff">Disable video repeat</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/xml/auth.xml b/TMessagesProj/src/main/res/xml/auth.xml
 index 4dc99f271100616399c0aa57620fd49b3c29a73a..5529762e4b81643e7ec789209288b1af395f334e 100644
@@ -9790,7 +9898,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..caaf17b3f2ef8a3fd799e71ea64773fa2ba67bf3 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..a9d9285b524168436273177e9fb9bd893c407f9b 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -9800,8 +9908,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..caaf17b3f2ef8a3fd799e71ea64773fa
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7315
-+APP_VERSION_NAME=13.2.2-telegramr.13
++APP_VERSION_CODE=7316
++APP_VERSION_NAME=13.2.2-telegramr.14
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android

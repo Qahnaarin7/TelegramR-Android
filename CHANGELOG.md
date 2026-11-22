@@ -1,4 +1,9 @@
-# TelegramR Android 13.2.2-telegramr.13
+# TelegramR Android 13.2.2-telegramr.14
+
+- Video repeat is now a single preference for the video player. Use the repeat action in the player menu to change it. The choice applies to videos in every chat and channel, including after restarting TelegramR.
+- The player uses Telegram’s usual repeat behavior until you choose a setting. The menu shows whether the available action enables or disables repeat.
+
+## TelegramR Android 13.2.2-telegramr.13
 
 - Builds without Firebase use a foreground service for the fallback connection for messages and calls. Extra Settings links to Android's battery optimization settings.
 - Observed activity now includes incoming messages and recent typing or recording actions delivered to the client. Profiles display the observed time when Telegram hides the exact status.
