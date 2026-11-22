@@ -1,4 +1,11 @@
-# TelegramR Android 13.2.2-telegramr.12
+# TelegramR Android 13.2.2-telegramr.13
+
+- Builds without Firebase use a foreground service for the fallback connection for messages and calls. Extra Settings links to Android's battery optimization settings.
+- Observed activity now includes incoming messages and recent typing or recording actions delivered to the client. Profiles display the observed time when Telegram hides the exact status.
+- Extra Settings shows the installed TelegramR version and checks GitHub for newer public TelegramR releases.
+- This build uses the public Telegram for Android source at 13.2.2 (7303). The 13.3.0 (7341) Google Play build is newer than the source available in the upstream repository.
+
+## TelegramR Android 13.2.2-telegramr.12
 
 - Натискання на «Редакції» розгортає або згортає історію всередині повідомлення. Штатне меню лишається доступним на решті повідомлення.
 - Довгі назви перемикачів у «Додатково» переносяться на наступний рядок.

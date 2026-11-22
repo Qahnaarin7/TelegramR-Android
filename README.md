@@ -1,17 +1,17 @@
 # TelegramR Android
 
-**English.** TelegramR Android is an unofficial Telegram for Android client (package app.telegramr.android) that runs alongside the official app with its own login. It adds a phone-style single-pane mode that works well on dual-screen devices, an optional two-pane mode, ghost mode, silent and delayed sending, a Read all action, and chat list font and avatar size settings. The source is a cumulative patch on top of Telegram for Android 13.2.2 (DrKLO/Telegram).
+TelegramR is an unofficial Telegram client for Android with a phone-style layout for dual-screen devices. Its separate package, `app.telegramr.android`, lets it run alongside the official client with its own sign-in session.
 
-Неофіційний клієнт Telegram для Android з окремим пакетом `app.telegramr.android`. Може працювати поруч з офіційним клієнтом і має власний сеанс входу.
+- **Chat layout.** One pane by default. The chat list and conversation open in turn. On dual-screen devices, TelegramR keeps the active pane within one usable display area when Android reports a separating hinge. Two-pane mode is available in Chat Settings.
+- **Chat controls.** Adjust the font and avatar sizes in the chat list. The chat menu includes a Read All action.
+- **Privacy and sending.** Extra Settings includes Ghost Mode, silent sending, a 12-second delay for text, and the last activity observed during the current session. You can also mark a chat as read after sending.
+- **Message history.** An optional encrypted local archive shows deleted messages and earlier revisions in the chat. It can retain copies of media already downloaded on the device.
+- **Notifications and updates.** A background connection helps receive messages and calls in builds without Firebase. Extra Settings shows the installed version and checks for public TelegramR releases on GitHub.
 
-- У режимі «Як на телефоні» список чатів і переписка відкриваються по черзі. На двоекранних пристроях активна панель розміщується в одній придатній області, якщо Android повідомляє про шарнір. У налаштуваннях є режим «Дві панелі».
-- «Додатково» містить «Невидимку», тихе надсилання, відкладення звичайного тексту на 12 секунд і показ поміченої активності.
-- У списку чатів можна налаштувати розмір шрифту й аватарів, а в меню відкритого чату є дія «Прочитати все».
+[Changelog](CHANGELOG.md) · [Build instructions](BUILD.md) · [Releases](https://github.com/Qahnaarin7/TelegramR-Android/releases)
 
-[Що змінилося у версії 13.2.2-telegramr.12](CHANGELOG.md) · [Як зібрати](BUILD.md) · [Releases](https://github.com/Qahnaarin7/TelegramR-Android/releases)
+## Source and license
 
-## Вихідний код
+`TelegramR-source.patch` contains the cumulative changes to Telegram for Android 13.2.2. The upstream source is pinned to revision `21f7d109da6ab3506c9e9577f98c6a38771ab335`. The upstream copyright notices are retained. Configure your own Telegram API credentials and Android signing key locally as described in the build guide. [Pinned upstream source](https://github.com/TelegramMessenger/Telegram-Android/tree/21f7d109da6ab3506c9e9577f98c6a38771ab335) · [GPL license](LICENSE)
 
-`TelegramR-source.patch` містить кумулятивні зміни для Telegram for Android 13.2.2. База — [DrKLO/Telegram, ревізія 21f7d109da6ab3506c9e9577f98c6a38771ab335](https://github.com/DrKLO/Telegram/tree/21f7d109da6ab3506c9e9577f98c6a38771ab335). Заголовки авторства збережено. Умови розповсюдження наведено в [LICENSE](LICENSE). Власні реквізити Telegram API й ключ Android-підпису задаються локально, як описано в інструкції збірки.
-
-Оновлення всередині Android-клієнта плануються окремо. [TelegramR для Windows](https://github.com/Qahnaarin7/TelegramR) має власний репозиторій і канал релізів.
+[TelegramR for Windows](https://github.com/Qahnaarin7/TelegramR) has its own repository and release channel.

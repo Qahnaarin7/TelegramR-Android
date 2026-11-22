@@ -260,10 +260,18 @@ index 03ecced28f2a532610aaaedecaeef493603e658c..00000000000000000000000000000000
 -}
 \ No newline at end of file
 diff --git a/TMessagesProj/src/main/AndroidManifest.xml b/TMessagesProj/src/main/AndroidManifest.xml
-index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c72606980b9e47e 100644
+index 99f64adbf76f4501355e463489df4963ce8bd55b..49eec1e3c109a47d2ba2aac17a12de3ad9472121 100644
 --- a/TMessagesProj/src/main/AndroidManifest.xml
 +++ b/TMessagesProj/src/main/AndroidManifest.xml
-@@ -94,7 +94,7 @@
+@@ -24,6 +24,7 @@
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
++    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+@@ -94,7 +95,7 @@
  
      <application
          android:name="org.telegram.messenger.ApplicationLoader"
@@ -272,7 +280,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
          android:restoreAnyVersion="true"
          android:backupAgent=".BackupAgent"
          android:hardwareAccelerated="true"
-@@ -250,7 +250,7 @@
+@@ -250,7 +251,7 @@
              <intent-filter>
                  <action android:name="android.intent.action.VIEW"/>
                  <category android:name="android.intent.category.DEFAULT"/>
@@ -281,7 +289,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
              </intent-filter>
              <intent-filter>
                  <action android:name="android.intent.action.VIEW"/>
-@@ -263,25 +263,25 @@
+@@ -263,25 +264,25 @@
                  <data android:host="t.me" android:scheme="http" />
                  <data android:host="t.me" android:scheme="https" />
              </intent-filter>
@@ -311,7 +319,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
                  <action android:name="android.intent.action.VIEW" />
                  <category android:name="android.intent.category.DEFAULT" />
                  <category android:name="android.intent.category.BROWSABLE" />
-@@ -306,8 +306,8 @@
+@@ -306,8 +307,8 @@
              <intent-filter>
                  <action android:name="android.intent.action.VIEW"/>
                  <category android:name="android.intent.category.DEFAULT"/>
@@ -322,7 +330,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
              </intent-filter>
          </activity-alias>
          <activity
-@@ -329,7 +329,7 @@
+@@ -329,7 +330,7 @@
              android:stateNotNeeded="true"
              android:theme="@style/Theme.TMessages.Transparent"
              android:exported="true">
@@ -331,7 +339,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
                  <action android:name="android.intent.action.VIEW" />
                  <category android:name="android.intent.category.BROWSABLE" />
                  <category android:name="android.intent.category.DEFAULT" />
-@@ -342,7 +342,7 @@
+@@ -342,7 +343,7 @@
              android:hardwareAccelerated="true"
              android:windowSoftInputMode="adjustPan"
              android:exported="true">
@@ -340,7 +348,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
                  <action android:name="org.telegram.passport.AUTHORIZE"/>
                  <category android:name="android.intent.category.DEFAULT"/>
              </intent-filter>
-@@ -353,7 +353,7 @@
+@@ -353,7 +354,7 @@
              android:hardwareAccelerated="true"
              android:windowSoftInputMode="adjustPan"
              android:exported="true">
@@ -349,7 +357,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
                  <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
              </intent-filter>
          </activity>
-@@ -363,7 +363,7 @@
+@@ -363,7 +364,7 @@
              android:hardwareAccelerated="true"
              android:windowSoftInputMode="adjustPan"
              android:exported="true">
@@ -358,7 +366,7 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
                  <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
              </intent-filter>
          </activity>
-@@ -372,7 +372,7 @@
+@@ -372,7 +373,7 @@
  <!--            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"-->
  <!--            android:hardwareAccelerated="true"-->
  <!--            android:windowSoftInputMode="adjustPan">-->
@@ -367,6 +375,21 @@ index 99f64adbf76f4501355e463489df4963ce8bd55b..c1d89c39fb6cab2395e541ba2c726069
  <!--                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>-->
  <!--            </intent-filter>-->
  <!--        </activity>-->
+@@ -493,9 +494,11 @@
+         <service
+             android:name=".NotificationsService"
+             android:enabled="true"
+-            android:exported="true"
+-            android:foregroundServiceType="dataSync"
+-        />
++            android:exported="false"
++            android:foregroundServiceType="specialUse">
++            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
++                android:value="Maintain the fallback connection for incoming messages and calls without FCM" />
++        </service>
+         <service
+             android:name=".NotificationRepeat"
+             android:exported="false"
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java b/TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java
 index d59b29a66c618169c229d2f16f847cb2d5a2300b..0860ef232070fb634ea3e411d52d7f971226115d 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java
@@ -386,6 +409,50 @@ index d59b29a66c618169c229d2f16f847cb2d5a2300b..0860ef232070fb634ea3e411d52d7f97
      }
  
      public static boolean isTabletInternal() {
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java b/TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java
+index 4d0a8f5dc450f58628e275459ec8569661616248..013af25930443cf971c6139c03d1ee29af1e9f96 100644
+--- a/TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java
+@@ -375,22 +375,26 @@ public class ApplicationLoader extends Application {
+         NotificationCenter.sanitize();
+     });
+ 
++    public static boolean isPushServiceEnabled() {
++        return MessagesController.getGlobalNotificationsSettings().getBoolean("pushService",
++                ConnectionsManager.defaultPushConnectionEnabled()
++                        || MessagesController.getMainSettings(UserConfig.selectedAccount).getBoolean("keepAliveService", false));
++    }
++
+     public static void startPushService() {
+-        SharedPreferences preferences = MessagesController.getGlobalNotificationsSettings();
+-        boolean enabled;
+-        if (preferences.contains("pushService")) {
+-            enabled = preferences.getBoolean("pushService", true);
+-        } else {
+-            enabled = MessagesController.getMainSettings(UserConfig.selectedAccount).getBoolean("keepAliveService", false);
++        Intent intent = new Intent(applicationContext, NotificationsService.class);
++        if (!isPushServiceEnabled() || UserConfig.getActivatedAccountsCount() == 0) {
++            applicationContext.stopService(intent);
++            return;
+         }
+-        if (enabled) {
+-            try {
+-                applicationContext.startService(new Intent(applicationContext, NotificationsService.class));
+-            } catch (Throwable ignore) {
+-
++        try {
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && ConnectionsManager.defaultPushConnectionEnabled()) {
++                applicationContext.startForegroundService(intent);
++            } else {
++                applicationContext.startService(intent);
+             }
+-        } else {
+-            applicationContext.stopService(new Intent(applicationContext, NotificationsService.class));
++        } catch (Exception e) {
++            FileLog.e(e);
+         }
+     }
+ 
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java b/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
 index 7af32f419ee24517c6f1db0a44fa6bf2cc074bdd..fcb3e22eb824c7ce79e43a7038d89a096a2750db 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
@@ -511,10 +578,10 @@ index 3a5413ce1fd15b3be5ee7eea8adf361f5836a8ff..e339e3320c8c9954cfc2d046d2f6d4ad
          String value;
  
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de73210d3ae45 100644
+index ec7683573bfeb138cd0daa50d9af9cf865eee77d..6e705241566994629b18c953bbd38c11ed008a11 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-@@ -10546,6 +10546,23 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -10546,6 +10546,24 @@ public class MessagesController extends BaseController implements NotificationCe
          });
      }
  
@@ -522,7 +589,8 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
 +    private final java.util.concurrent.ConcurrentHashMap<Long, Integer> telegramRObserved = new java.util.concurrent.ConcurrentHashMap<>();
 +
 +    private void recordTelegramRActivity(long userId, int date) {
-+        if (!TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED) || userId == getUserConfig().getClientUserId()) {
++        if (userId <= 0 || date <= 0 || userId == getUserConfig().getClientUserId()
++                || !TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED)) {
 +            return;
 +        }
 +        if (telegramRObserved.size() >= 4096 && !telegramRObserved.containsKey(userId)) {
@@ -538,7 +606,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
      public void updateTimerProc() {
          long currentTime = System.currentTimeMillis();
  
-@@ -10553,7 +10570,13 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -10553,7 +10571,13 @@ public class MessagesController extends BaseController implements NotificationCe
          checkReadTasks();
  
          if (getUserConfig().isClientActivated()) {
@@ -553,7 +621,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                  if (ApplicationLoader.mainInterfacePausedStageQueueTime != 0 && Math.abs(ApplicationLoader.mainInterfacePausedStageQueueTime - System.currentTimeMillis()) > 1000) {
                      if (statusSettingState != 1 && (lastStatusUpdateTime == 0 || Math.abs(System.currentTimeMillis() - lastStatusUpdateTime) >= 55000 || offlineSent)) {
                          statusSettingState = 1;
-@@ -10578,7 +10601,14 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -10578,7 +10602,14 @@ public class MessagesController extends BaseController implements NotificationCe
                          });
                      }
                  }
@@ -569,7 +637,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                  statusSettingState = 2;
                  if (statusRequest != 0) {
                      getConnectionsManager().cancelRequest(statusRequest, true);
-@@ -10589,6 +10619,9 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -10589,6 +10620,9 @@ public class MessagesController extends BaseController implements NotificationCe
                      if (error == null) {
                          offlineSent = true;
                      } else {
@@ -579,7 +647,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                          if (lastStatusUpdateTime != 0) {
                              lastStatusUpdateTime += 5000;
                          }
-@@ -11412,7 +11445,8 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -11412,7 +11446,8 @@ public class MessagesController extends BaseController implements NotificationCe
      }
  
      public boolean sendTyping(long dialogId, long threadMsgId, int action, String emojicon, int classGuid) {
@@ -589,14 +657,6 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
              return false;
          }
          final long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
-@@ -18646,6 +18680,7 @@ public class MessagesController extends BaseController implements NotificationCe
-                             }
-                             if (!message.out && a == 1 && user.status != null && user.status.expires <= 0 && Math.abs(getConnectionsManager().getCurrentTime() - message.date) < 30) {
-                                 onlinePrivacy.put(userId, message.date);
-+                                recordTelegramRActivity(userId, message.date);
-                                 interfaceUpdateMask |= UPDATE_MASK_STATUS;
-                             }
-                         }
 @@ -18884,6 +18919,7 @@ public class MessagesController extends BaseController implements NotificationCe
                      TLRPC.User user = getUser(update.peer.user_id);
                      if (user != null && user.status != null && user.status.expires <= 0 && Math.abs(getConnectionsManager().getCurrentTime() - date) < 30) {
@@ -605,7 +665,22 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                          interfaceUpdateMask |= UPDATE_MASK_STATUS;
                      }
                  }
-@@ -19933,7 +19969,17 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -18992,6 +19028,14 @@ public class MessagesController extends BaseController implements NotificationCe
+                 if (uid == 0) {
+                     uid = userId;
+                 }
++                if (action instanceof TLRPC.TL_sendMessageTypingAction
++                        || action instanceof TLRPC.TL_sendMessageRecordAudioAction
++                        || action instanceof TLRPC.TL_sendMessageRecordRoundAction
++                        || action instanceof TLRPC.TL_sendMessageRecordVideoAction) {
++                    if (date > 0 && Math.abs(getConnectionsManager().getCurrentTime() - date) < 30) {
++                        recordTelegramRActivity(userId, date);
++                    }
++                }
+                 if (action instanceof TLRPC.TL_sendMessageTextDraftAction) {
+                     AndroidUtilities.runOnUIThread(() -> BotForumHelper.getInstance(currentAccount)
+                         .onBotForumDraftUpdate(userId, threadId, (TLRPC.TL_sendMessageTextDraftAction) action));
+@@ -19933,7 +19977,17 @@ public class MessagesController extends BaseController implements NotificationCe
                  for (int a = 0, size2 = messageObjects.size(); a < size2; a++) {
                      messagesRes.messages.add(messageObjects.get(a).messageOwner);
                  }
@@ -624,7 +699,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
              }
              LongSparseArray<ArrayList<MessageObject>> editingMessagesFinal = editingMessages;
              getMessagesStorage().getStorageQueue().postRunnable(() -> AndroidUtilities.runOnUIThread(() -> {
-@@ -20037,6 +20083,9 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -20037,6 +20091,9 @@ public class MessagesController extends BaseController implements NotificationCe
                          dbUsersStatus.add(toDbUser);
                          if (update.user_id == getUserConfig().getClientUserId()) {
                              getNotificationsController().setLastOnlineFromOtherDevice(update.status.expires);
@@ -634,7 +709,7 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                          }
                      } else if (baseUpdate instanceof TL_update.TL_updateMonoForumNoPaidException) {
                          TL_update.TL_updateMonoForumNoPaidException update = (TL_update.TL_updateMonoForumNoPaidException) baseUpdate;
-@@ -21329,6 +21378,7 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -21329,6 +21386,7 @@ public class MessagesController extends BaseController implements NotificationCe
                  long key = deletedMessages.keyAt(a);
                  ArrayList<Integer> arrayList = deletedMessages.valueAt(a);
                  getMessagesStorage().getStorageQueue().postRunnable(() -> {
@@ -642,6 +717,21 @@ index ec7683573bfeb138cd0daa50d9af9cf865eee77d..5c9134051f9db27f1473fefcc49de732
                      ArrayList<Long> dialogIds = getMessagesStorage().markMessagesAsDeleted(key, arrayList, false, true, 0, 0);
                      getMessagesStorage().updateDialogsWithDeletedMessages(key, -key, arrayList, dialogIds);
                  });
+@@ -21983,6 +22041,14 @@ public class MessagesController extends BaseController implements NotificationCe
+             checkDialogReplied(dialogId, messages);
+             for (int a = 0; a < messages.size(); a++) {
+                 MessageObject message = messages.get(a);
++                if (!isEncryptedChat && !message.isOut() && message.messageOwner.action == null
++                        && !(message.messageOwner instanceof TLRPC.TL_messageService)) {
++                    long sender = DialogObject.getPeerDialogId(message.messageOwner.from_id);
++                    if (sender == 0 && DialogObject.isUserDialog(dialogId)) {
++                        sender = dialogId;
++                    }
++                    recordTelegramRActivity(sender, message.messageOwner.date);
++                }
+                 if (lastMessage == null || (!isEncryptedChat && message.getId() > lastMessage.getId() || (isEncryptedChat || message.getId() < 0 && lastMessage.getId() < 0) && message.getId() < lastMessage.getId()) || message.messageOwner.date > lastMessage.messageOwner.date) {
+                     lastMessage = message;
+                     if (message.messageOwner.peer_id.channel_id != 0) {
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java
 index 07716f345ac1fb5a9aa551497c8773c4fbb1093b..c45ddefb9ef9c675c07b1bee05690c4557704176 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesStorage.java
@@ -776,6 +866,64 @@ index 4f18f46f4fc13447f3ea8d3da1fe29ff95658c44..2609839442f541b0d047141fe6902db4
      public static final int historyCleared = totalEvents++;
      public static final int messagesRead = totalEvents++;
      public static final int threadMessagesRead = totalEvents++;
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/NotificationsService.java b/TMessagesProj/src/main/java/org/telegram/messenger/NotificationsService.java
+index a32cd26b40e05e983d870838fbca773c506872d9..28d87b0d44f0bcd1751ac09ccb994a76e2a4b6f8 100644
+--- a/TMessagesProj/src/main/java/org/telegram/messenger/NotificationsService.java
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/NotificationsService.java
+@@ -8,7 +8,16 @@
+ 
+ package org.telegram.messenger;
+ 
++import android.app.NotificationChannel;
++import android.app.NotificationManager;
++import android.app.PendingIntent;
+ import android.app.Service;
++import android.os.Build;
++
++import androidx.core.app.NotificationCompat;
++
++import org.telegram.tgnet.ConnectionsManager;
++import org.telegram.ui.LaunchActivity;
+ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.os.IBinder;
+@@ -23,6 +32,27 @@ public class NotificationsService extends Service {
+ 
+     @Override
+     public int onStartCommand(Intent intent, int flags, int startId) {
++        final boolean fallback = ConnectionsManager.defaultPushConnectionEnabled();
++        if (fallback && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
++            String channel = "telegramr_background_connection";
++            NotificationManager manager = getSystemService(NotificationManager.class);
++            manager.createNotificationChannel(new NotificationChannel(channel,
++                    LocaleController.getString(R.string.TelegramRBackgroundConnection), NotificationManager.IMPORTANCE_LOW));
++            PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, LaunchActivity.class),
++                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
++            startForeground(0x7251, new NotificationCompat.Builder(this, channel)
++                    .setSmallIcon(R.drawable.notification)
++                    .setContentTitle(LocaleController.getString(R.string.TelegramRBackgroundConnection))
++                    .setContentText(LocaleController.getString(R.string.TelegramRBackgroundConnectionDescription))
++                    .setContentIntent(open)
++                    .setOngoing(true)
++                    .setSilent(true)
++                    .build());
++        }
++        if (!ApplicationLoader.isPushServiceEnabled() || UserConfig.getActivatedAccountsCount() == 0) {
++            stopSelf(startId);
++            return START_NOT_STICKY;
++        }
+         return START_STICKY;
+     }
+ 
+@@ -34,7 +64,7 @@ public class NotificationsService extends Service {
+     public void onDestroy() {
+         super.onDestroy();
+         SharedPreferences preferences = MessagesController.getGlobalNotificationsSettings();
+-        if (preferences.getBoolean("pushService", true)) {
++        if (!ConnectionsManager.defaultPushConnectionEnabled() && preferences.getBoolean("pushService", true)) {
+             Intent intent = new Intent("org.telegram.start");
+             intent.setPackage(getPackageName());
+             sendBroadcast(intent);
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java b/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java
 index 55452d3d69f26b585c77ffb97fdb353c2e15188e..300afba0612bf751b3ac2adfb74321e5a7762d0f 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/SendMessagesHelper.java
@@ -2421,7 +2569,7 @@ index 9f8f0977bb3a5744c92089d0da72cfa1f7120364..17e0c0e5d844663d1cec63e12d782ab8
              if (switchLanguageTextView != null) {
                  switchLanguageTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
-index 1dd2ffee89eae828b749d0edd8234da411ce6f9d..2986d8bb2c381eb495d7644322467f0858495f7a 100644
+index 1dd2ffee89eae828b749d0edd8234da411ce6f9d..dd435cd362a59c50d8236e457b1ec01b7be37167 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
 @@ -352,6 +352,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
@@ -2486,7 +2634,15 @@ index 1dd2ffee89eae828b749d0edd8234da411ce6f9d..2986d8bb2c381eb495d7644322467f08
          GramWalletStorageAuth.onActivityStopped(this);
          isStarted = false;
          PipCoordinator.getInstance().onActivityStop(this);
-@@ -7311,12 +7322,22 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
+@@ -7209,6 +7220,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
+     @Override
+     protected void onResume() {
+         super.onResume();
++        ApplicationLoader.startPushService();
+         WidgetMedia.onAppPaused(false);
+         isResumed = true;
+         PipCoordinator.getInstance().onActivityResume(this);
+@@ -7311,12 +7323,22 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
  
      public static Runnable whenResumed;
  
@@ -2513,10 +2669,18 @@ index 1dd2ffee89eae828b749d0edd8234da411ce6f9d..2986d8bb2c381eb495d7644322467f08
              long dialogId = 0;
              long topicId = 0;
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java
-index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930ca35a0063 100644
+index dac59c13af07cf36e469f858c696187ba0024b95..8b7df99ef10c8930bc319c61c4b1fed9b1ddaf0a 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java
-@@ -2018,6 +2018,20 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -1684,6 +1684,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+         MessagesController.getInstance(currentAccount).cleanup();
+         UserConfig.getInstance(currentAccount).syncContacts = syncContacts;
+         UserConfig.getInstance(currentAccount).setCurrentUser(res.user);
++        ApplicationLoader.startPushService();
+         UserConfig.getInstance(currentAccount).saveConfig(true);
+         MessagesStorage.getInstance(currentAccount).cleanup(true);
+         ArrayList<TLRPC.User> users = new ArrayList<>();
+@@ -2018,6 +2019,20 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
          private boolean ignoreOnPhoneChangePaste = false;
          private boolean nextPressed = false;
          private boolean confirmedNumber = false;
@@ -2537,7 +2701,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
  
          private int titleClickCount = 0;
          private long lastTitleClick = 0;
-@@ -2871,6 +2885,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -2871,6 +2886,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
  
          @Override
          public void onCancelPressed() {
@@ -2545,7 +2709,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
              nextPressed = false;
          }
  
-@@ -3181,6 +3196,17 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -3181,6 +3197,17 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                  }
              }
  
@@ -2563,7 +2727,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
              TLObject req;
              if (activityMode == MODE_CHANGE_PHONE_NUMBER) {
                  TL_account.sendChangePhoneCode changePhoneCode = new TL_account.sendChangePhoneCode();
-@@ -3215,7 +3241,12 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -3215,7 +3242,12 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
              phoneInputData.phoneNumber = "+" + codeField.getText() + " " + phoneField.getText();
              phoneInputData.country = currentCountry;
              phoneInputData.patterns = phoneFormatMap.get(codeField.getText().toString());
@@ -2576,7 +2740,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
                  nextPressed = false;
                  if (error == null) {
                      if (response instanceof TLRPC.TL_auth_sentCodeSuccess) {
-@@ -3257,6 +3288,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -3257,6 +3289,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                              }), ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
                          } else if (error.text.contains("PHONE_NUMBER_INVALID")) {
                              needShowInvalidAlert(LoginActivity.this, phone, phoneInputData, false);
@@ -2585,7 +2749,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
                          } else if (error.text.contains("PHONE_PASSWORD_FLOOD")) {
                              needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString("FloodWait", R.string.FloodWait));
                          } else if (error.text.contains("PHONE_NUMBER_FLOOD")) {
-@@ -3279,8 +3312,16 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -3279,8 +3313,16 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                  if (!isRequestingFirebaseSms) {
                      needHideProgress(false);
                  }
@@ -2603,7 +2767,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
          }
  
          private boolean numberFilled;
-@@ -3437,6 +3478,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
+@@ -3437,6 +3479,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
          @Override
          public void onDestroyActivity() {
              super.onDestroyActivity();
@@ -2615,7 +2779,7 @@ index dac59c13af07cf36e469f858c696187ba0024b95..599595710ac00f70c3ca7aa555cd930c
                  cancelRequestingPasskey.run();
                  cancelRequestingPasskey = null;
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/NotificationsSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/NotificationsSettingsActivity.java
-index f1aee7810a039f5883d139abeee5f23a8a3f4871..5b35afaecd071d8cd5633235f4838a011a488d1f 100644
+index f1aee7810a039f5883d139abeee5f23a8a3f4871..32aba295d8944a7e80edb6abd51fde0d61eda5b5 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/NotificationsSettingsActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/NotificationsSettingsActivity.java
 @@ -733,7 +733,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
@@ -2627,9 +2791,21 @@ index f1aee7810a039f5883d139abeee5f23a8a3f4871..5b35afaecd071d8cd5633235f4838a01
                  SharedPreferences.Editor editor = preferences.edit();
                  editor.putBoolean("pushConnection", !enabled);
                  editor.commit();
-@@ -1031,7 +1031,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
+@@ -762,7 +762,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
+                 }
+             } else if (position == notificationsServiceRow) {
+                 SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
+-                enabled = preferences.getBoolean("pushService", getMessagesController().keepAliveService);
++                enabled = ApplicationLoader.isPushServiceEnabled();
+                 SharedPreferences.Editor editor = preferences.edit();
+                 editor.putBoolean("pushService", !enabled);
+                 editor.commit();
+@@ -1029,9 +1029,9 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
+                     } else if (position == androidAutoAlertRow) {
+                         checkCell.setTextAndCheck("Android Auto", preferences.getBoolean("EnableAutoNotifications", false), true);
                      } else if (position == notificationsServiceRow) {
-                         checkCell.setTextAndValueAndCheck(getString("NotificationsService", R.string.NotificationsService), getString("NotificationsServiceInfo", R.string.NotificationsServiceInfo), preferences.getBoolean("pushService", getMessagesController().keepAliveService), true, true);
+-                        checkCell.setTextAndValueAndCheck(getString("NotificationsService", R.string.NotificationsService), getString("NotificationsServiceInfo", R.string.NotificationsServiceInfo), preferences.getBoolean("pushService", getMessagesController().keepAliveService), true, true);
++                        checkCell.setTextAndValueAndCheck(getString("NotificationsService", R.string.NotificationsService), getString("NotificationsServiceInfo", R.string.NotificationsServiceInfo), ApplicationLoader.isPushServiceEnabled(), true, true);
                      } else if (position == notificationsServiceConnectionRow) {
 -                        checkCell.setTextAndValueAndCheck(getString("NotificationsServiceConnection", R.string.NotificationsServiceConnection), getString("NotificationsServiceConnectionInfo", R.string.NotificationsServiceConnectionInfo), preferences.getBoolean("pushConnection", getMessagesController().backgroundConnection), true, true);
 +                        checkCell.setTextAndValueAndCheck(getString("NotificationsServiceConnection", R.string.NotificationsServiceConnection), getString("NotificationsServiceConnectionInfo", R.string.NotificationsServiceConnectionInfo), getConnectionsManager().isPushConnectionEnabled(), true, true);
@@ -2637,7 +2813,7 @@ index f1aee7810a039f5883d139abeee5f23a8a3f4871..5b35afaecd071d8cd5633235f4838a01
                          checkCell.setTextAndCheck(getString("BadgeNumberShow", R.string.BadgeNumberShow), getNotificationsController().showBadgeNumber, true);
                      } else if (position == badgeNumberMutedRow) {
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
-index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..5d64e29fe1e7f86adcf6cb79f5be891ce0e673d0 100644
+index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..2bd6fac9fd3aa2ad8c713b1c11b3c23aef08d750 100644
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
 @@ -164,6 +164,7 @@ import org.telegram.messenger.NotificationsController;
@@ -2648,23 +2824,25 @@ index 9656ebaf5c40097e8f42de2f224f4897d8ccda9c..5d64e29fe1e7f86adcf6cb79f5be891c
  import org.telegram.messenger.SvgHelper;
  import org.telegram.messenger.UserConfig;
  import org.telegram.messenger.UserObject;
-@@ -11742,6 +11743,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
+@@ -11742,6 +11743,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                  isOnline[0] = false;
                  newString2 = LocaleController.formatUserStatus(currentAccount, user, isOnline, shortStatus ? new boolean[1] : null);
                  hiddenStatusButton = user != null && !isOnline[0] && !getUserConfig().isPremium() && user.status != null && (user.status instanceof TLRPC.TL_userStatusRecently || user.status instanceof TLRPC.TL_userStatusLastMonth || user.status instanceof TLRPC.TL_userStatusLastWeek) && user.status.by_me;
-+                if (!isOnline[0] && user.status != null && user.status.expires <= 0
++                if (!(user.status instanceof TLRPC.TL_userStatusOnline)
++                        && !(user.status instanceof TLRPC.TL_userStatusOffline)
 +                        && TelegramRSettings.option(currentAccount, TelegramRSettings.OBSERVED)) {
 +                    final int observed = getMessagesController().getTelegramRObservedActivity(user.id);
 +                    if (observed > 0) {
 +                        newString2 = LocaleController.formatString(R.string.TelegramRObservedAt,
 +                                LocaleController.formatDateTime(observed, true));
++                        isOnline[0] = false;
 +                        hiddenStatusButton = false;
 +                    }
 +                }
                  if (onlineTextView != null && !mediaHeaderVisible) {
                      int key = isOnline[0] && peerColor == null ? Theme.key_profile_status : Theme.key_actionBarDefaultSubtitle;
                      onlineTextView.setTag(key);
-@@ -14824,7 +14834,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
+@@ -14824,7 +14836,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                      new SearchResult(321, getString(R.string.BubbleRadius), "bubbleRadiusHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))).withLink("tg://settings/appearance/message-corners"),
                      new SearchResult(322, getString(R.string.ChatList), "chatListHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))),
                      new SearchResult(323, getString(R.string.ChatListSwipeGesture), "swipeGestureHeaderRow", getString(R.string.ChatSettings), R.drawable.msg2_discussion, () -> f.presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC))),
@@ -3145,10 +3323,10 @@ index 0000000000000000000000000000000000000000..63643bc8ec0ab8d6726d9996a4260d78
 +}
 diff --git a/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6caa9281750
+index 0000000000000000000000000000000000000000..3894ae561764586a95642721a5847b30149a56d9
 --- /dev/null
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/TelegramRSettingsActivity.java
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,262 @@
 +/*
 + * TelegramR modifications to Telegram for Android.
 + * Licensed under GNU GPL v. 2 or later. See LICENSE.
@@ -3158,16 +3336,30 @@ index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6ca
 +import static org.telegram.messenger.LocaleController.getString;
 +
 +import android.content.Context;
++import android.content.Intent;
++import android.provider.Settings;
 +import android.view.View;
 +
++import org.json.JSONObject;
++import org.telegram.messenger.AndroidUtilities;
++import org.telegram.messenger.LocaleController;
 +import org.telegram.messenger.R;
++import org.telegram.messenger.browser.Browser;
++import org.telegram.tgnet.ConnectionsManager;
 +import org.telegram.messenger.TelegramRSettings;
 +import org.telegram.ui.Components.RecyclerListView;
 +import org.telegram.ui.Components.UItem;
 +import org.telegram.ui.Components.UniversalAdapter;
 +import org.telegram.ui.Components.UniversalFragment;
 +
++import java.io.BufferedReader;
++import java.io.InputStreamReader;
++import java.net.HttpURLConnection;
++import java.net.URL;
++import java.nio.charset.StandardCharsets;
 +import java.util.ArrayList;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
 +
 +final class TelegramRSettingsActivity extends UniversalFragment {
 +    private static final int SILENT_SEND = 1;
@@ -3181,6 +3373,14 @@ index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6ca
 +    private static final int HISTORY = 11;
 +    private static final int CLEAR_HISTORY = 12;
 +    private static final int READ_AFTER_SEND = 13;
++    private static final int UPDATES = 14;
++    private static final int BATTERY = 15;
++    private static final String RELEASES = "https://github.com/Qahnaarin7/TelegramR-Android/releases";
++    private static final Pattern REVISION = Pattern.compile("(?:r|[0-9.]+-telegramr\\.)([0-9]{1,9})");
++    private String installedVersion = "";
++    private String newerTag;
++    private int updateStatus = R.string.TelegramRCheckingUpdates;
++    private boolean checkingUpdates;
 +
 +    TelegramRSettingsActivity(int account) {
 +        currentAccount = account;
@@ -3193,10 +3393,15 @@ index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6ca
 +
 +    @Override
 +    public View createView(Context context) {
++        try {
++            installedVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
++        } catch (android.content.pm.PackageManager.NameNotFoundException ignored) {
++        }
 +        setHasOwnBackground(true);
 +        final View view = super.createView(context);
 +        listView.setSections();
 +        listView.setSectionsDrawBackground(true);
++        checkUpdates();
 +        return view;
 +    }
 +
@@ -3242,6 +3447,77 @@ index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6ca
 +        items.add(UItem.asHeader(getString(R.string.TelegramRAppearance)));
 +        items.add(UItem.asCheck(HIDE_STORIES, getString(R.string.TelegramRHideStories)).wrapCheckTitle()
 +                .setChecked(TelegramRSettings.option(currentAccount, TelegramRSettings.HIDE_STORIES)));
++        if (ConnectionsManager.defaultPushConnectionEnabled()) {
++            items.add(UItem.asButton(BATTERY, getString(R.string.TelegramRBatterySettings)));
++            items.add(UItem.asShadow(getString(R.string.TelegramRBatterySettingsDescription)));
++        }
++        items.add(UItem.asHeader(getString(R.string.AppUpdate)));
++        items.add(UItem.asButton(UPDATES, getString(R.string.TelegramRCheckUpdates)));
++        items.add(UItem.asShadow(LocaleController.formatString(R.string.TelegramRInstalledVersion, installedVersion)
++                + "\n" + (newerTag == null ? getString(updateStatus)
++                        : LocaleController.formatString(R.string.TelegramRUpdateAvailable, newerTag))));
++    }
++
++    private void checkUpdates() {
++        if (checkingUpdates) {
++            return;
++        }
++        checkingUpdates = true;
++        new Thread(() -> {
++            int status = R.string.TelegramRUpdateCheckFailed;
++            String available = null;
++            HttpURLConnection connection = null;
++            try {
++                connection = (HttpURLConnection) new URL(
++                        "https://api.github.com/repos/Qahnaarin7/TelegramR-Android/releases/latest").openConnection();
++                connection.setConnectTimeout(6000);
++                connection.setReadTimeout(6000);
++                connection.setInstanceFollowRedirects(false);
++                connection.setRequestProperty("Accept", "application/vnd.github+json");
++                int code = connection.getResponseCode();
++                if (code == 404) {
++                    status = R.string.TelegramRNoPublishedReleases;
++                } else if (code == 200) {
++                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(
++                            connection.getInputStream(), StandardCharsets.UTF_8))) {
++                        StringBuilder json = new StringBuilder();
++                        String line;
++                        while ((line = reader.readLine()) != null && json.length() < 262144) {
++                            json.append(line);
++                        }
++                        String tag = new JSONObject(json.toString()).optString("tag_name");
++                        int revision = revisionOf(tag);
++                        int installed = revisionOf(installedVersion);
++                        if (revision > 0 && installed > 0) {
++                            if (revision > installed) {
++                                available = tag;
++                            }
++                            status = R.string.YourVersionIsLatest;
++                        }
++                    }
++                }
++            } catch (Exception ignored) {
++            } finally {
++                if (connection != null) {
++                    connection.disconnect();
++                }
++            }
++            final int result = status;
++            final String version = available;
++            AndroidUtilities.runOnUIThread(() -> {
++                checkingUpdates = false;
++                updateStatus = result;
++                newerTag = version;
++                if (!isFinished && listView != null) {
++                    listView.adapter.update(true);
++                }
++            });
++        }, "TelegramR update check").start();
++    }
++
++    private static int revisionOf(String version) {
++        Matcher matcher = REVISION.matcher(version == null ? "" : version);
++        return matcher.matches() ? Integer.parseInt(matcher.group(1)) : 0;
 +    }
 +
 +    private void addPrivacy(ArrayList<UItem> items, int id, int label, int description,
@@ -3252,7 +3528,22 @@ index 0000000000000000000000000000000000000000..bf69c42a77be7edc2d64a3ee41fac6ca
 +
 +    @Override
 +    protected void onClick(UItem item, View view, int position, float x, float y) {
-+        if (item.id == CLEAR_HISTORY) {
++        if (item.id == UPDATES) {
++            if (newerTag != null) {
++                Browser.openUrl(getParentActivity(), RELEASES + "/tag/" + newerTag);
++            } else {
++                updateStatus = R.string.TelegramRCheckingUpdates;
++                checkUpdates();
++                listView.adapter.update(true);
++            }
++            return;
++        } else if (item.id == BATTERY) {
++            try {
++                startActivityForResult(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS), 0);
++            } catch (android.content.ActivityNotFoundException ignored) {
++            }
++            return;
++        } else if (item.id == CLEAR_HISTORY) {
 +            final long owner = getUserConfig().getClientUserId();
 +            showDialog(new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity(), getResourceProvider())
 +                    .setTitle(getString(R.string.TelegramRClearHistory))
@@ -8631,17 +8922,17 @@ index 0000000000000000000000000000000000000000..b1ca092e560dae1d552e600f3dc801a7
 +</vector>
 diff --git a/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..475f86a36f0705ee08f83288915bbb3a6f285bfe
+index 0000000000000000000000000000000000000000..10b218890c3bfb20b0d1c4b9165d9aa7d3784ffc
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-ru/strings_telegramr.xml
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,73 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRGhostActive">Режим невидимки включён</string>
 +    <string name="TelegramRShowChannelBar">Показать нижнюю панель</string>
 +    <string name="TelegramRHideChannelBar">Скрыть нижнюю панель</string>
 +    <string name="TelegramRObserved">Показывать замеченную активность</string>
-+    <string name="TelegramRObservedDescription">Если время скрыто, показывает последнее полученное действие за текущий сеанс.</string>
++    <string name="TelegramRObservedDescription">Если точный статус скрыт, показывает время последнего сообщения или действия, полученных за текущий сеанс.</string>
 +    <string name="TelegramRObservedAt">По замеченной активности · %1$s</string>
 +    <string name="TelegramRDelay">Отправлять текст через 12 секунд</string>
 +    <string name="TelegramRDelayDescription">Telegram отправляет текст из очереди через 12 секунд. Вместе со скрытием статуса «В сети» это помогает оставаться офлайн при отправке. Другие сеансы могут показывать активность.</string>
@@ -8697,13 +8988,23 @@ index 0000000000000000000000000000000000000000..475f86a36f0705ee08f83288915bbb3a
 +    <string name="TelegramRReadAfterSend">Отмечать чат прочитанным после отправки</string>
 +    <string name="TelegramRReadAfterSendDescription">Отмечает этот чат или тему прочитанными после подтверждения отправки Telegram, даже если включено скрытие прочтения.</string>
 +    <string name="TelegramRHistoryUnknownAuthor">Автор неизвестен</string>
++    <string name="TelegramRBackgroundConnection">Фоновое соединение TelegramR</string>
++    <string name="TelegramRBackgroundConnectionDescription">Поддерживает соединение для входящих сообщений и звонков.</string>
++    <string name="TelegramRBatterySettings">Настройки батареи</string>
++    <string name="TelegramRBatterySettingsDescription">Разрешите TelegramR работать в фоне для входящих сообщений и звонков.</string>
++    <string name="TelegramRCheckUpdates">Проверить обновления TelegramR</string>
++    <string name="TelegramRInstalledVersion">Установленная версия: %1$s</string>
++    <string name="TelegramRCheckingUpdates">Проверяем обновления…</string>
++    <string name="TelegramRNoPublishedReleases">Публичных релизов TelegramR пока нет.</string>
++    <string name="TelegramRUpdateCheckFailed">Не удалось проверить обновления.</string>
++    <string name="TelegramRUpdateAvailable">Доступна версия TelegramR %1$s. Нажмите, чтобы открыть релиз.</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..5357b9c93def9c519b172aa710e09ec3264c370d
+index 0000000000000000000000000000000000000000..3c60556fb4978d0f3a91ab6020e198c258f664f9
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values-uk/strings_telegramr.xml
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,73 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Вигляд чатів</string>
@@ -8737,7 +9038,7 @@ index 0000000000000000000000000000000000000000..5357b9c93def9c519b172aa710e09ec3
 +    <string name="TelegramRShowChannelBar">Показати нижню панель</string>
 +    <string name="TelegramRHideChannelBar">Приховати нижню панель</string>
 +    <string name="TelegramRObserved">Показувати помічену активність</string>
-+    <string name="TelegramRObservedDescription">Для прихованого часу показує останню отриману дію за поточний сеанс.</string>
++    <string name="TelegramRObservedDescription">Якщо точний статус приховано, показує час останнього повідомлення або дії, отриманих за поточний сеанс.</string>
 +    <string name="TelegramRObservedAt">За поміченою активністю · %1$s</string>
 +    <string name="TelegramRDelay">Відкладати текст на 12 секунд</string>
 +    <string name="TelegramRDelayDescription">Telegram надсилає текст із черги через 12 секунд. Разом із приховуванням онлайн-статусу це допомагає залишатися офлайн під час надсилання. Інші сеанси можуть показувати активність.</string>
@@ -8766,13 +9067,23 @@ index 0000000000000000000000000000000000000000..5357b9c93def9c519b172aa710e09ec3
 +    <string name="TelegramRReadAfterSend">Позначати чат прочитаним після надсилання</string>
 +    <string name="TelegramRReadAfterSendDescription">Позначає цей чат або тему прочитаними після підтвердження надсилання Telegram, навіть якщо ввімкнено приховування прочитання.</string>
 +    <string name="TelegramRHistoryUnknownAuthor">Автор невідомий</string>
++    <string name="TelegramRBackgroundConnection">Фонове з’єднання TelegramR</string>
++    <string name="TelegramRBackgroundConnectionDescription">Підтримує з’єднання для вхідних повідомлень і дзвінків.</string>
++    <string name="TelegramRBatterySettings">Налаштування батареї</string>
++    <string name="TelegramRBatterySettingsDescription">Дозвольте TelegramR працювати у фоні для вхідних повідомлень і дзвінків.</string>
++    <string name="TelegramRCheckUpdates">Перевірити оновлення TelegramR</string>
++    <string name="TelegramRInstalledVersion">Встановлена версія: %1$s</string>
++    <string name="TelegramRCheckingUpdates">Перевіряємо оновлення…</string>
++    <string name="TelegramRNoPublishedReleases">Публічних релізів TelegramR ще немає.</string>
++    <string name="TelegramRUpdateCheckFailed">Не вдалося перевірити оновлення.</string>
++    <string name="TelegramRUpdateAvailable">Доступна версія TelegramR %1$s. Натисніть, щоб відкрити реліз.</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/values/strings_telegramr.xml b/TMessagesProj/src/main/res/values/strings_telegramr.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e1bf4968357a40829906be77e0a286ac600d9f2
+index 0000000000000000000000000000000000000000..d9dfd0ab1a2a10f8dcff00a2498285393bc27834
 --- /dev/null
 +++ b/TMessagesProj/src/main/res/values/strings_telegramr.xml
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,73 @@
 +<resources>
 +    <string name="TelegramRAppLabel">TelegramR</string>
 +    <string name="TelegramRChatLayout">Chat layout</string>
@@ -8806,7 +9117,7 @@ index 0000000000000000000000000000000000000000..7e1bf4968357a40829906be77e0a286a
 +    <string name="TelegramRShowChannelBar">Show bottom bar</string>
 +    <string name="TelegramRHideChannelBar">Hide bottom bar</string>
 +    <string name="TelegramRObserved">Show observed activity</string>
-+    <string name="TelegramRObservedDescription">Shows the most recent action received this session when last seen is hidden.</string>
++    <string name="TelegramRObservedDescription">Shows the time of the last message or action received during this session when the exact status is hidden.</string>
 +    <string name="TelegramRObservedAt">Based on observed activity · %1$s</string>
 +    <string name="TelegramRDelay">Schedule text 12 seconds later</string>
 +    <string name="TelegramRDelayDescription">Telegram sends eligible text from its queue after 12 seconds. With Hide online enabled, this helps you stay offline when sending. Other sessions can still show activity.</string>
@@ -8835,6 +9146,16 @@ index 0000000000000000000000000000000000000000..7e1bf4968357a40829906be77e0a286a
 +    <string name="TelegramRReadAfterSend">Mark chat read after sending</string>
 +    <string name="TelegramRReadAfterSendDescription">Sends a read receipt for this chat or topic once Telegram accepts your message, even if Hide read receipts is enabled.</string>
 +    <string name="TelegramRHistoryUnknownAuthor">Unknown author</string>
++    <string name="TelegramRBackgroundConnection">TelegramR background connection</string>
++    <string name="TelegramRBackgroundConnectionDescription">Keeps the connection for incoming messages and calls.</string>
++    <string name="TelegramRBatterySettings">Battery settings</string>
++    <string name="TelegramRBatterySettingsDescription">Allow TelegramR to run in the background for incoming messages and calls.</string>
++    <string name="TelegramRCheckUpdates">Check for TelegramR updates</string>
++    <string name="TelegramRInstalledVersion">Installed version: %1$s</string>
++    <string name="TelegramRCheckingUpdates">Checking for updates…</string>
++    <string name="TelegramRNoPublishedReleases">No public TelegramR releases yet.</string>
++    <string name="TelegramRUpdateCheckFailed">Could not check for updates.</string>
++    <string name="TelegramRUpdateAvailable">TelegramR %1$s is available. Tap to open the release.</string>
 +</resources>
 diff --git a/TMessagesProj/src/main/res/xml/auth.xml b/TMessagesProj/src/main/res/xml/auth.xml
 index 4dc99f271100616399c0aa57620fd49b3c29a73a..5529762e4b81643e7ec789209288b1af395f334e 100644
@@ -9469,7 +9790,7 @@ index 5007845320897ef79ece22ea3a6037cad980a7b9..2c71db7d4765c134818498928d2a7d87
                      project.fileTree("src/main/res") {
                          include("values-*/strings.xml")
 diff --git a/gradle.properties b/gradle.properties
-index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..604ee041548d22708fac3fea18d327193562396f 100644
+index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..caaf17b3f2ef8a3fd799e71ea64773fa2ba67bf3 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -13,14 +13,11 @@
@@ -9479,8 +9800,8 @@ index 17bb1dca2c58cc29eef16dd4ec48c3ec17ac2d19..604ee041548d22708fac3fea18d32719
 -APP_VERSION_CODE=7303
 -APP_VERSION_NAME=13.2.2
 -APP_PACKAGE=org.telegram.messenger
-+APP_VERSION_CODE=7314
-+APP_VERSION_NAME=13.2.2-telegramr.12
++APP_VERSION_CODE=7315
++APP_VERSION_NAME=13.2.2-telegramr.13
 +APP_PACKAGE=app.telegramr.android
  IS_PRIVATE=false
 -RELEASE_KEY_PASSWORD=android
